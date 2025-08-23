@@ -61,6 +61,12 @@ export class WebSocketService {
     const url = new URL(info.req.url || '', `http://${info.req.headers.host}`);
     const token = url.searchParams.get('token');
 
+    // In development mode, allow connections without token for testing
+    if (config.nodeEnv === 'development' && !token) {
+      logger.info('WebSocket connection accepted without token (development mode)');
+      return true;
+    }
+
     if (!token) {
       logger.warn('WebSocket connection rejected: No token provided');
       return false;
@@ -91,6 +97,10 @@ export class WebSocketService {
           ws.close(1008, 'Invalid token');
           return;
         }
+      } else if (config.nodeEnv === 'development') {
+        // In development mode, assign a default user ID for testing
+        userId = 'dev-user';
+        logger.info('WebSocket client connected in development mode without authentication');
       }
 
       const client: IWebSocketClient = {

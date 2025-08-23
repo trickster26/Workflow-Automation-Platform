@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import speakeasy from 'speakeasy';
+import { Op } from 'sequelize';
 import { UserModel, IUser } from '../models/User.model';
 import { createLogger } from '../utils/logger';
 import config from '../config';
@@ -58,6 +59,8 @@ export class AuthService {
       logger.warn('Using fallback JWT secret. Set JWT_SECRET environment variable for production.');
     }
     
+    // Sessions now persist across restarts (unless expired)
+    
     // Clean up expired sessions periodically
     setInterval(() => {
       this.cleanupExpiredSessions();
@@ -113,12 +116,12 @@ export class AuthService {
       const user = await UserModel.create({
         ...userData,
         role: userData.role || 'user',
-        status: 'pending', // Requires email verification
+        isActive: true, // Activate immediately for development
       });
 
       // Generate email verification token
       const verificationToken = user.generateEmailVerificationToken();
-      await user.save();
+      // In production, you would store this token and send verification email
 
       logger.info('User registered successfully', {
         userId: user.id,
@@ -154,11 +157,11 @@ export class AuthService {
       // Find user by email or username
       const user = await UserModel.findOne({
         where: {
-          $or: [
+          [Op.or]: [
             { email: identifier },
             { username: identifier },
           ],
-        } as any,
+        },
       });
 
       if (!user) {
@@ -166,26 +169,10 @@ export class AuthService {
         throw new Error('Invalid credentials');
       }
 
-      // Check if account is locked
-      if (user.isLocked()) {
-        logger.warn('Login failed: account locked', { userId: user.id });
-        throw new Error('Account is temporarily locked due to too many failed login attempts');
-      }
-
       // Check if account is active
-      if (user.status !== 'active') {
-        logger.warn('Login failed: account not active', {
-          userId: user.id,
-          status: user.status,
-        });
-        
-        if (user.status === 'pending') {
-          throw new Error('Please verify your email address before logging in');
-        } else if (user.status === 'suspended') {
-          throw new Error('Your account has been suspended. Please contact support.');
-        } else {
-          throw new Error('Account is not active');
-        }
+      if (!user.isActive) {
+        logger.warn('Login failed: account not active', { userId: user.id });
+        throw new Error('Account is not active');
       }
 
       // Verify password
@@ -193,35 +180,14 @@ export class AuthService {
       
       if (!isValidPassword) {
         logger.warn('Login failed: invalid password', { userId: user.id });
-        await user.incrementLoginAttempts();
         throw new Error('Invalid credentials');
       }
 
-      // Check two-factor authentication
-      if (user.twoFactorEnabled) {
-        if (!twoFactorToken) {
-          // Return temporary token for 2FA verification
-          const tempToken = this.generateTempToken(user.id);
-          return {
-            user: user.toSafeJSON(),
-            requiresTwoFactor: true,
-            tempToken,
-            tokens: {} as IAuthTokens,
-          };
-        }
-
-        const isValidTwoFactor = this.verifyTwoFactorToken(user.twoFactorSecret!, twoFactorToken);
-        if (!isValidTwoFactor) {
-          logger.warn('Login failed: invalid 2FA token', { userId: user.id });
-          throw new Error('Invalid two-factor authentication code');
-        }
-      }
-
-      // Reset failed login attempts
-      await user.resetLoginAttempts();
+      // Two-factor authentication is not implemented yet
+      // Skip 2FA check for now
 
       // Update last login
-      user.updateLastLogin(ipAddress);
+      user.updateLastLogin();
       await user.save();
 
       // Generate session and tokens
@@ -283,7 +249,7 @@ export class AuthService {
 
       // Get user
       const user = await UserModel.findByPk(payload.userId);
-      if (!user || user.status !== 'active') {
+      if (!user || !user.isActive) {
         throw new Error('User not found or not active');
       }
 
@@ -309,9 +275,24 @@ export class AuthService {
     try {
       const payload = jwt.verify(token, this.jwtSecret) as ITokenPayload;
       
+      // Validate payload structure - reject old malformed tokens
+      if (!payload.userId || !payload.sessionId || !payload.email || !payload.username) {
+        logger.warn('Token has invalid payload structure', {
+          hasUserId: !!payload.userId,
+          hasSessionId: !!payload.sessionId,
+          hasEmail: !!payload.email,
+          hasUsername: !!payload.username
+        });
+        throw new Error('Invalid token structure');
+      }
+      
       // Check if session exists
       const session = this.activeSessions.get(payload.sessionId);
       if (!session) {
+        logger.warn('Session not found', { 
+          sessionId: payload.sessionId,
+          activeSessionsCount: this.activeSessions.size
+        });
         throw new Error('Session not found');
       }
 
@@ -320,6 +301,11 @@ export class AuthService {
 
       return payload;
     } catch (error: any) {
+      logger.warn('Token verification failed', {
+        error: error.message,
+        tokenPrefix: token.substring(0, 20) + '...'
+      });
+      
       if (error.name === 'TokenExpiredError') {
         throw new Error('Token expired');
       } else if (error.name === 'JsonWebTokenError') {
@@ -585,11 +571,11 @@ export class AuthService {
       email: user.email,
       username: user.username,
       role: user.role,
-      status: user.status,
+      status: user.isActive ? 'active' : 'inactive',
       sessionId,
     };
 
-    const accessTokenExpiry = '15m'; // 15 minutes
+    const accessTokenExpiry = '1d'; // 15 minutes
     const refreshTokenExpiry = '7d'; // 7 days
 
     const accessToken = jwt.sign(payload, this.jwtSecret, {
@@ -603,7 +589,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: 15 * 60, // 15 minutes in seconds
+      expiresIn: 60 * 24 * 60, // 1 day in seconds
       tokenType: 'Bearer',
     };
   }

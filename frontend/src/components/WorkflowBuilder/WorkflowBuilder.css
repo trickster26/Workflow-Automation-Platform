@@ -1,0 +1,79 @@
+.workflow-builder {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f9fafb;
+}
+
+.workflow-builder-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.workflow-canvas {
+  flex: 1;
+  position: relative;
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.workflow-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.workflow-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
+.node-count {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* React Flow Customizations */
+.react-flow__node {
+  font-size: 12px;
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #6366f1;
+  stroke-width: 3;
+}
+
+.react-flow__controls {
+  button {
+    background: white;
+    border: 1px solid #e5e7eb;
+    
+    &:hover {
+      background: #f3f4f6;
+    }
+  }
+}
+
+.react-flow__minimap {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.react-flow__attribution {
+  display: none;
+}

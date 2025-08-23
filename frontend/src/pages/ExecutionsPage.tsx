@@ -10,8 +10,8 @@ import {
   XCircleIcon,
   PauseCircleIcon,
 } from 'lucide-react';
-import { executionApi } from '@/services/api';
-import { ExecutionStatus, IExecution } from '@/types/workflow';
+import { executionApi } from '../services/api';
+import { ExecutionStatus, IExecution } from '../types/workflow';
 import { formatDistanceToNow, format } from 'date-fns';
 
 const statusIcons = {

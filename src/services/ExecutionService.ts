@@ -2,9 +2,9 @@ import { EventEmitter } from 'events';
 import Bull, { Queue, Job, JobOptions } from 'bull';
 import { v4 as uuidv4 } from 'uuid';
 import { WorkflowEngine, IWorkflowExecuteAdditionalData } from '../core/WorkflowEngine';
-import { ExecutionModel } from '../models/Execution.model';
+import { ExecutionModel, IExecution as ExecutionModelType } from '../models/Execution.model';
 import { WorkflowModel } from '../models/Workflow.model';
-import { IWorkflow, IExecution, ExecutionStatus, INode, NodeType } from '../types/workflow.types';
+import { IWorkflow, ExecutionStatus, INode, NodeType } from '../types/workflow.types';
 import config from '../config';
 import { createLogger } from '../utils/logger';
 
@@ -22,7 +22,7 @@ export interface IExecutionJobData {
 }
 
 export interface IExecutionResult {
-  execution: IExecution;
+  execution: ExecutionModelType;
   success: boolean;
   error?: Error;
 }
@@ -52,6 +52,49 @@ export class ExecutionService extends EventEmitter {
       },
     });
 
+    // Add error handling for the queue
+    this.executionQueue.on('error', (error) => {
+      logger.error('Bull queue error', {
+        error: error.message,
+        stack: error.stack,
+      });
+    });
+
+    this.executionQueue.on('waiting', (jobId) => {
+      logger.debug('Job waiting', { jobId });
+    });
+
+    this.executionQueue.on('active', (job) => {
+      logger.info('Job started processing', { 
+        jobId: job.id,
+        workflowId: job.data.workflowId,
+        mode: job.data.mode
+      });
+    });
+
+    this.executionQueue.on('completed', (job, result) => {
+      logger.info('Job completed successfully', { 
+        jobId: job.id,
+        workflowId: job.data.workflowId
+      });
+    });
+
+    this.executionQueue.on('failed', (job, error) => {
+      logger.error('Job failed', { 
+        jobId: job.id,
+        workflowId: job.data?.workflowId,
+        error: error.message,
+        stack: error.stack
+      });
+    });
+
+    this.executionQueue.on('stalled', (job) => {
+      logger.warn('Job stalled', { 
+        jobId: job.id,
+        workflowId: job.data?.workflowId
+      });
+    });
+
     this.setupQueueHandlers();
   }
 
@@ -63,6 +106,11 @@ export class ExecutionService extends EventEmitter {
   }
 
   private setupQueueHandlers(): void {
+    logger.info('Setting up Bull queue handlers', {
+      queueName: 'workflow-execution',
+      concurrency: 5
+    });
+
     this.executionQueue.process('execute-workflow', 5, async (job: Job<IExecutionJobData>) => {
       const { workflowId, userId, mode, startNode, inputData, webhookData, variables, credentials } = job.data;
       
@@ -87,6 +135,13 @@ export class ExecutionService extends EventEmitter {
           credentials,
         });
 
+        // Store job ID in execution data for mapping
+        execution.data = {
+          ...execution.data,
+          jobId: job.id?.toString(),
+        };
+        await this.updateExecution(execution);
+
         job.progress(10);
 
         const additionalData: IWorkflowExecuteAdditionalData = {
@@ -96,8 +151,8 @@ export class ExecutionService extends EventEmitter {
           credentials,
         };
 
-        const engine = new WorkflowEngine(workflow, additionalData);
-        this.activeExecutions.set(execution.id, engine);
+        const engine = new WorkflowEngine(workflow, { ...additionalData, executionId: execution.id });
+        this.activeExecutions.set(job.id?.toString() || execution.id.toString(), engine);
 
         this.setupEngineEventHandlers(engine, execution, job);
 
@@ -105,9 +160,24 @@ export class ExecutionService extends EventEmitter {
 
         const result = await engine.execute(startNode);
         
-        await this.updateExecution(result);
+        // Convert workflow execution result to database model format
+        const dbExecution: ExecutionModelType = {
+          id: execution.id,
+          workflowId: execution.workflowId,
+          status: result.status === ExecutionStatus.SUCCESS ? 'success' : 'error',
+          startedAt: execution.startedAt,
+          finishedAt: result.stoppedAt || new Date(),
+          data: result.data,
+          error: result.status === ExecutionStatus.FAILED ? JSON.stringify(result.data?.resultData?.error) : undefined,
+          executionTime: result.stoppedAt ? new Date(result.stoppedAt).getTime() - new Date(result.startedAt).getTime() : undefined,
+          mode: execution.mode,
+          createdAt: execution.createdAt || new Date(),
+          updatedAt: new Date(),
+        };
         
-        this.activeExecutions.delete(execution.id);
+        await this.updateExecution(dbExecution);
+        
+        this.activeExecutions.delete(execution.id.toString());
         
         const executionResult: IExecutionResult = {
           execution: result,
@@ -387,6 +457,45 @@ export class ExecutionService extends EventEmitter {
     return execution?.status || null;
   }
 
+  public async getExecutionStatusByJobId(jobId: string): Promise<any | null> {
+    try {
+      // First check if there's an active execution for this job
+      const activeEngine = this.activeExecutions.get(jobId);
+      if (activeEngine) {
+        const execution = activeEngine.getExecution();
+        return execution;
+      }
+
+      // Look for execution by job ID stored in the data
+      const executions = await ExecutionModel.findAll({
+        limit: 10,
+        order: [['createdAt', 'DESC']],
+        where: {
+          data: {
+            [require('sequelize').Op.like]: `%"jobId":"${jobId}"%`
+          }
+        }
+      });
+
+      if (executions.length > 0) {
+        const execution = executions[0].toJSON();
+        return execution;
+      }
+
+      // Fallback: Check active executions map using execution ID
+      for (const [activeJobId, engine] of this.activeExecutions.entries()) {
+        if (activeJobId === jobId) {
+          return engine.getExecution();
+        }
+      }
+
+      return null;
+    } catch (error: any) {
+      logger.error(`Error fetching execution by job ID ${jobId}:`, error);
+      return null;
+    }
+  }
+
   public async getActiveExecutions(): Promise<string[]> {
     return Array.from(this.activeExecutions.keys());
   }
@@ -430,15 +539,12 @@ export class ExecutionService extends EventEmitter {
   private async createExecution(
     workflow: IWorkflow,
     additionalData: IWorkflowExecuteAdditionalData
-  ): Promise<IExecution> {
-    const execution: Partial<IExecution> = {
-      id: uuidv4(),
-      workflowId: workflow.id,
-      workflowData: workflow,
-      mode: additionalData.mode || 'manual',
+  ): Promise<ExecutionModelType> {
+    const execution = {
+      workflowId: parseInt(workflow.id as string), // Convert to number for database
+      status: 'running' as const,
       startedAt: new Date(),
-      finished: false,
-      status: ExecutionStatus.RUNNING,
+      mode: (additionalData.mode || 'manual') as 'manual' | 'trigger' | 'test',
       data: {
         resultData: {
           runData: {},
@@ -446,18 +552,24 @@ export class ExecutionService extends EventEmitter {
       },
     };
 
-    const executionModel = await ExecutionModel.create(execution as any);
-    return executionModel.toJSON() as IExecution;
+    const executionModel = await ExecutionModel.create(execution);
+    
+    // Ensure the ID is properly set
+    const result = executionModel.toJSON() as ExecutionModelType;
+    result.id = executionModel.id; // Explicitly set the ID
+    
+    return result;
   }
 
-  private async updateExecution(execution: IExecution): Promise<void> {
+  private async updateExecution(execution: ExecutionModelType): Promise<void> {
     try {
       await ExecutionModel.update(
         {
           status: execution.status,
-          finished: execution.finished,
-          stoppedAt: execution.stoppedAt,
+          finishedAt: execution.finishedAt,
           data: execution.data,
+          error: execution.error,
+          executionTime: execution.executionTime,
         },
         {
           where: { id: execution.id },
@@ -468,10 +580,10 @@ export class ExecutionService extends EventEmitter {
     }
   }
 
-  private async getExecution(executionId: string): Promise<IExecution | null> {
+  private async getExecution(executionId: string | number): Promise<ExecutionModelType | null> {
     try {
       const execution = await ExecutionModel.findByPk(executionId);
-      return execution ? execution.toJSON() as IExecution : null;
+      return execution ? execution.toJSON() as ExecutionModelType : null;
     } catch (error: any) {
       logger.error(`Error fetching execution ${executionId}:`, error);
       return null;
@@ -517,7 +629,7 @@ export class ExecutionService extends EventEmitter {
 
       const executions = await ExecutionModel.findAll({
         where: whereClause,
-        attributes: ['status', 'startedAt', 'stoppedAt'],
+        attributes: ['status', 'startedAt', 'finishedAt'],
       });
 
       const metrics = {
@@ -553,8 +665,8 @@ export class ExecutionService extends EventEmitter {
             break;
         }
 
-        if (execution.stoppedAt && execution.startedAt) {
-          const executionTime = execution.stoppedAt.getTime() - execution.startedAt.getTime();
+        if (execution.finishedAt && execution.startedAt) {
+          const executionTime = execution.finishedAt.getTime() - execution.startedAt.getTime();
           totalExecutionTime += executionTime;
           completedExecutions++;
         }

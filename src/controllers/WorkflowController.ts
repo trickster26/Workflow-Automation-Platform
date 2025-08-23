@@ -95,11 +95,46 @@ export class WorkflowController {
         whereClause.userId = userId;
       }
 
-      const workflow = await WorkflowModel.findOne({
+      let workflow = await WorkflowModel.findOne({
         where: whereClause,
       });
 
       if (!workflow) {
+        // If workflow doesn't exist and ID looks like a UUID, create a new workflow
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(workflowId);
+        
+        if (isUUID) {
+          logger.info('UUID workflow not found, creating new workflow', { originalId: workflowId, userId });
+          
+          const workflowData = {
+            userId,
+            name: req.body.name || 'Untitled Workflow',
+            description: req.body.description || '',
+            nodes: req.body.nodes || [],
+            connections: req.body.connections || [],
+            settings: req.body.settings || {},
+            isActive: req.body.isActive !== undefined ? req.body.isActive : false,
+            version: 1,
+            tags: req.body.tags || [],
+          };
+
+          workflow = await WorkflowModel.create(workflowData);
+          const createdWorkflow = workflow.toJSON() as IWorkflow;
+
+          // Create webhooks and triggers for the workflow
+          await WorkflowController.setupWorkflowIntegrations(createdWorkflow);
+
+          logger.info(`Created workflow with new ID: ${createdWorkflow.id}`, {
+            originalId: workflowId,
+            newWorkflowId: createdWorkflow.id,
+            name: createdWorkflow.name,
+            userId,
+          });
+
+          res.status(201).json(createdWorkflow);
+          return;
+        }
+        
         return res.status(404).json({ error: 'Workflow not found' });
       }
 

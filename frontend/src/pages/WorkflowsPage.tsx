@@ -11,8 +11,8 @@ import {
   MoreVerticalIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { workflowApi } from '@/services/api';
-import { IWorkflow, WorkflowStatus } from '@/types/workflow';
+import { workflowApi } from '../services/api';
+import { IWorkflow, WorkflowStatus } from '../types/workflow';
 import { formatDistanceToNow } from 'date-fns';
 
 export function WorkflowsPage() {

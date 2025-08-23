@@ -19,6 +19,7 @@ import { AuthController } from './controllers/AuthController';
 import { UserController } from './controllers/UserController';
 import { AuthMiddleware } from './middleware/auth';
 import monitoringRoutes from './routes/monitoring';
+import exportRoutes from './routes/exportRoutes';
 import { executionMonitoringService } from './services/ExecutionMonitoringService';
 import { executionLoggingService } from './services/ExecutionLoggingService';
 
@@ -107,6 +108,9 @@ class WorkflowAutomationPlatform {
 
     // Monitoring and Logging Routes
     this.app.use('/api/monitoring', monitoringRoutes);
+    
+    // Data Export Routes
+    this.app.use('/api/exports', exportRoutes);
 
     this.app.get('/health', async (req, res) => {
       try {
@@ -218,6 +222,22 @@ class WorkflowAutomationPlatform {
         res.json({ status });
       } catch (error: any) {
         logger.error('Error fetching execution status:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Alternative endpoint that accepts job ID and finds the associated execution
+    this.app.get('/api/jobs/:jobId/execution/status', async (req, res) => {
+      try {
+        const status = await executionService.getExecutionStatusByJobId(req.params.jobId);
+        
+        if (status === null) {
+          return res.status(404).json({ error: 'Job execution not found' });
+        }
+        
+        res.json({ status });
+      } catch (error: any) {
+        logger.error('Error fetching job execution status:', error);
         res.status(500).json({ error: error.message });
       }
     });

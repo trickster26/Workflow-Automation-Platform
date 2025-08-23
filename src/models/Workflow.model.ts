@@ -16,18 +16,19 @@ export interface IWorkflow {
 }
 
 export class WorkflowModel extends Model<IWorkflow> implements IWorkflow {
-  public id!: number;
-  public userId!: number;
-  public name!: string;
-  public description?: string;
-  public nodes!: any[];
-  public connections!: any[];
-  public settings?: any;
-  public isActive!: boolean;
-  public version!: number;
-  public tags?: string[];
-  public createdAt!: Date;
-  public updatedAt!: Date;
+  // Remove public class fields to avoid shadowing Sequelize's getters/setters
+  declare id: number;
+  declare userId: number;
+  declare name: string;
+  declare description?: string;
+  declare nodes: any[];
+  declare connections: any[];
+  declare settings?: any;
+  declare isActive: boolean;
+  declare version: number;
+  declare tags?: string[];
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 export const initWorkflowModel = (sequelize: Sequelize) => {

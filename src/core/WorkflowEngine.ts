@@ -18,6 +18,7 @@ export interface IWorkflowExecuteAdditionalData {
   variables?: Record<string, any>;
   userId?: string;
   webhookData?: any;
+  executionId?: number | string;
 }
 
 export class WorkflowEngine extends EventEmitter {
@@ -42,7 +43,7 @@ export class WorkflowEngine extends EventEmitter {
 
   private initializeExecution(): IExecution {
     return {
-      id: uuidv4(),
+      id: this.additionalData.executionId?.toString() || uuidv4(),
       workflowId: this.workflow.id,
       workflowData: this.workflow,
       mode: 'manual',

@@ -5,10 +5,13 @@ import {
   BarChart3Icon, 
   SettingsIcon,
   MenuIcon,
-  XIcon
+  XIcon,
+  LogOutIcon,
+  UserIcon
 } from 'lucide-react';
 import { useState } from 'react';
 import clsx from 'clsx';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3Icon },
@@ -20,6 +23,7 @@ const navigation = [
 export function Layout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -59,6 +63,27 @@ export function Layout() {
               </Link>
             ))}
           </nav>
+          {/* Mobile user info */}
+          <div className="px-4 py-4 border-t border-gray-200">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={logout}
+              className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <LogOutIcon className="mr-3 h-4 w-4" />
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
 
@@ -84,6 +109,27 @@ export function Layout() {
             </Link>
           ))}
         </nav>
+        {/* Desktop user info */}
+        <div className="px-4 py-4 border-t border-gray-200">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                <UserIcon className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            <LogOutIcon className="mr-3 h-4 w-4" />
+            Sign out
+          </button>
+        </div>
       </div>
 
       {/* Main content */}

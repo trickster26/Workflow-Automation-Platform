@@ -5,7 +5,7 @@ import {
   INodeTypeDescription,
   ExecutionMetrics,
   QueueStats,
-} from '@/types/workflow';
+} from '../types/workflow';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000/api',
@@ -16,7 +16,7 @@ const api = axios.create({
 
 // Request interceptor for auth
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -28,7 +28,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
+      // Clear all auth tokens
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -171,4 +173,5 @@ export const healthApi = {
   },
 };
 
+export { api };
 export default api;

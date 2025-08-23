@@ -4,7 +4,7 @@ import { NodeType } from '../../types/workflow.types';
 export const HttpRequestNode: INodeType = {
   description: {
     displayName: 'HTTP Request',
-    name: 'httpRequest',
+    name: 'http',
     group: ['transform'],
     version: 1,
     description: 'Makes HTTP requests to any URL',
@@ -202,7 +202,7 @@ export const HttpRequestNode: INodeType = {
         };
 
         // Add authentication
-        if (authentication !== 'none') {
+        if (authentication && authentication !== 'none') {
           const credentials = await this.getCredentials(authentication);
           this.addAuthentication(requestOptions, authentication, credentials);
         }

@@ -746,7 +746,7 @@ export class ExecutionMonitoringService extends EventEmitter {
   private broadcastSystemMetrics(metrics: ISystemMetrics): void {
     const wsService = getWebSocketService();
     if (wsService) {
-      wsService.broadcast({
+      wsService.broadcastMessage({
         type: 'system_metrics',
         data: metrics,
       });

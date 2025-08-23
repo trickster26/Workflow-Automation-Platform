@@ -7,8 +7,8 @@ import {
   ClockIcon,
   TrendingUpIcon,
 } from 'lucide-react';
-import { executionApi, workflowApi, queueApi, triggerApi } from '@/services/api';
-import { ExecutionStatus } from '@/types/workflow';
+import { executionApi, workflowApi, queueApi, triggerApi } from '../services/api';
+import { ExecutionStatus } from '../types/workflow';
 import { formatDistanceToNow } from 'date-fns';
 
 export function DashboardPage() {
@@ -102,7 +102,7 @@ export function DashboardPage() {
                       }`} />
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {execution.workflowData.name}
+                          {execution.workflowData?.name || `Workflow #${execution.workflowId}`}
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatDistanceToNow(new Date(execution.startedAt))} ago

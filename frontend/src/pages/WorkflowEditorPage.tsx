@@ -1,108 +1,217 @@
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from 'react-query';
-import { ArrowLeftIcon } from 'lucide-react';
-import { WorkflowEditor } from '@/components/WorkflowEditor';
-import { workflowApi } from '@/services/api';
-import { useWorkflowStore } from '@/stores/workflowStore';
+import { Node, Edge } from 'reactflow';
+import { WorkflowBuilder } from '../components/WorkflowBuilder/WorkflowBuilder';
+import { ExecutionResults } from '../components/WorkflowBuilder/ExecutionResults';
+import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import './WorkflowEditorPage.css';
 
-export function WorkflowEditorPage() {
+const WorkflowEditorPage: React.FC = () => {
   const { workflowId } = useParams<{ workflowId: string }>();
   const navigate = useNavigate();
-  const { setCurrentWorkflow, createNewWorkflow, currentWorkflow } = useWorkflowStore();
+  const { user } = useAuth();
+  const [workflow, setWorkflow] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [executionJobId, setExecutionJobId] = useState<string | null>(null);
 
-  // Fetch workflow if editing existing workflow
-  const { data: workflow, isLoading, error } = useQuery(
-    ['workflow', workflowId],
-    () => workflowApi.getById(workflowId!),
-    {
-      enabled: !!workflowId,
-      onSuccess: (data) => {
-        setCurrentWorkflow(data);
-      },
-    }
-  );
-
-  // Create new workflow if no workflowId
   useEffect(() => {
-    if (!workflowId) {
-      const newWorkflow = createNewWorkflow();
-      setCurrentWorkflow(newWorkflow);
+    if (workflowId && workflowId !== 'new') {
+      loadWorkflow();
+    } else {
+      setLoading(false);
     }
-  }, [workflowId, createNewWorkflow, setCurrentWorkflow]);
+  }, [workflowId]);
 
-  const handleBack = () => {
-    navigate('/workflows');
+  const loadWorkflow = async () => {
+    try {
+      const response = await api.get(`/workflows/${workflowId}`);
+      setWorkflow(response.data);
+    } catch (error) {
+      console.error('Failed to load workflow:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (workflowId && isLoading) {
+  const handleSave = async (nodes: Node[], edges: Edge[]) => {
+    setSaving(true);
+    try {
+      const workflowData = {
+        name: workflow?.name || 'New Workflow',
+        description: workflow?.description || '',
+        nodes: nodes.map(node => ({
+          id: node.id,
+          type: node.data.type,
+          position: node.position,
+          data: node.data,
+          parameters: node.data.parameters || {},
+        })),
+        connections: edges.map(edge => ({
+          source: {
+            nodeId: edge.source,
+            outputIndex: edge.sourceHandle ? parseInt(edge.sourceHandle) : 0,
+          },
+          target: {
+            nodeId: edge.target,
+            inputIndex: edge.targetHandle ? parseInt(edge.targetHandle) : 0,
+          },
+        })),
+        settings: workflow?.settings || {},
+        isActive: workflow?.isActive || false,
+      };
+
+      let response;
+      if (workflowId && workflowId !== 'new') {
+        response = await api.put(`/workflows/${workflowId}`, workflowData);
+      } else {
+        response = await api.post('/workflows', workflowData);
+        navigate(`/workflows/${response.data.id}/edit`, { replace: true });
+      }
+      
+      setWorkflow(response.data);
+      console.log('Workflow saved successfully');
+    } catch (error) {
+      console.error('Failed to save workflow:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async (nodes: Node[], edges: Edge[]) => {
+    try {
+      // First save the workflow
+      await handleSave(nodes, edges);
+      
+      // Validate workflow has nodes
+      if (nodes.length === 0) {
+        alert('Please add at least one node to test the workflow');
+        return;
+      }
+      
+      // Then test it
+      const response = await api.post(`/executions`, {
+        workflowId: workflow?.id || workflowId,
+        mode: 'manual',
+      });
+      
+      console.log('Test execution started:', response.data);
+      
+      // Show execution results panel
+      if (response.data.jobId) {
+        setExecutionJobId(response.data.jobId);
+      }
+    } catch (error) {
+      console.error('Failed to test workflow:', error);
+      alert(`❌ Failed to test workflow: ${error.response?.data?.error || error.message}`);
+    }
+  };
+
+  const convertWorkflowToReactFlow = (workflow: any): { nodes: Node[], edges: Edge[] } => {
+    if (!workflow) {
+      return { nodes: [], edges: [] };
+    }
+
+    const nodes: Node[] = (workflow.nodes || []).map((node: any) => ({
+      id: node.id,
+      type: getNodeType(node.type),
+      position: node.position || { x: 100, y: 100 },
+      data: {
+        label: node.data?.label || node.name || node.type,
+        type: node.type,
+        description: node.data?.description || '',
+        parameters: node.parameters || {},
+        ...node.data,
+      },
+    }));
+
+    const edges: Edge[] = (workflow.connections || []).map((conn: any, index: number) => ({
+      id: `${conn.source.nodeId}-${conn.target.nodeId}-${index}`,
+      source: conn.source.nodeId,
+      target: conn.target.nodeId,
+      sourceHandle: conn.source.outputIndex?.toString(),
+      targetHandle: conn.target.inputIndex?.toString(),
+      type: 'smoothstep',
+      animated: true,
+    }));
+
+    return { nodes, edges };
+  };
+
+  const getNodeType = (type: string): string => {
+    const triggerTypes = ['manual', 'schedule', 'webhook'];
+    const conditionTypes = ['condition', 'switch'];
+    const actionTypes = ['http', 'database', 'email', 'export', 'code', 'delay', 'loop'];
+    
+    if (triggerTypes.includes(type)) return 'trigger';
+    if (conditionTypes.includes(type)) return 'condition';
+    if (actionTypes.includes(type)) return 'action';
+    
+    return 'custom';
+  };
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading workflow...</p>
-        </div>
+      <div className="workflow-editor-loading">
+        <div className="spinner"></div>
+        <p>Loading workflow...</p>
       </div>
     );
   }
 
-  if (workflowId && error) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Workflow Not Found</h2>
-          <p className="text-gray-600 mb-4">The requested workflow could not be loaded.</p>
-          <button onClick={handleBack} className="btn-primary">
-            Back to Workflows
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const { nodes, edges } = convertWorkflowToReactFlow(workflow);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={handleBack}
-            className="btn-ghost btn-sm flex items-center space-x-2"
+    <div className="workflow-editor-page">
+      <div className="workflow-editor-header">
+        <div className="header-content">
+          <button 
+            className="btn-back" 
+            onClick={() => navigate('/workflows')}
           >
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span>Back</span>
+            ← Back to Workflows
           </button>
-          
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              {currentWorkflow?.name || 'New Workflow'}
-            </h1>
-            <p className="text-sm text-gray-600">
-              {workflowId ? 'Editing workflow' : 'Creating new workflow'}
-            </p>
+          <div className="workflow-info">
+            <input
+              type="text"
+              className="workflow-name-input"
+              value={workflow?.name || 'New Workflow'}
+              onChange={(e) => setWorkflow({ ...workflow, name: e.target.value })}
+              placeholder="Workflow Name"
+            />
+            <input
+              type="text"
+              className="workflow-description-input"
+              value={workflow?.description || ''}
+              onChange={(e) => setWorkflow({ ...workflow, description: e.target.value })}
+              placeholder="Workflow Description"
+            />
           </div>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {currentWorkflow && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                currentWorkflow.active 
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {currentWorkflow.active ? 'Active' : 'Inactive'}
-              </span>
-              <span>v{currentWorkflow.version}</span>
-            </div>
-          )}
+          {saving && <span className="saving-indicator">Saving...</span>}
         </div>
       </div>
-
-      {/* Editor */}
-      <div className="flex-1">
-        <WorkflowEditor workflowId={workflowId} />
+      
+      <div className="workflow-editor-content">
+        <WorkflowBuilder
+          workflowId={workflowId}
+          initialNodes={nodes}
+          initialEdges={edges}
+          onSave={handleSave}
+          onTest={handleTest}
+          readOnly={false}
+        />
       </div>
+
+      {/* Execution Results Modal */}
+      {executionJobId && (
+        <ExecutionResults
+          jobId={executionJobId}
+          onClose={() => setExecutionJobId(null)}
+        />
+      )}
     </div>
   );
-}
+};
+
+export default WorkflowEditorPage;

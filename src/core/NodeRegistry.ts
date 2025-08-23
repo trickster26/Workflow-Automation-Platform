@@ -73,13 +73,16 @@ export class NodeRegistry {
     const { HttpRequestNode } = require('./integrations/HttpRequestNode');
     const { EmailNode } = require('./integrations/EmailNode');
     const { DatabaseNode } = require('./integrations/DatabaseNode');
+    const { ExportNode } = require('./integrations/ExportNode');
     
     // Register advanced nodes
     this.registerNodeType(HttpRequestNode);
     this.registerNodeType(EmailNode);
     this.registerNodeType(DatabaseNode);
+    this.registerNodeType(ExportNode);
     
     // Register basic nodes
+    this.registerManualTriggerNode();
     this.registerWebhookNode();
     this.registerScheduleNode();
     this.registerTransformNode();
@@ -91,6 +94,29 @@ export class NodeRegistry {
     this.registerSplitNode();
   }
 
+  private registerManualTriggerNode(): void {
+    const manualNode: INodeType = {
+      description: {
+        displayName: 'Manual Trigger',
+        name: 'manual',
+        group: ['trigger'],
+        version: 1,
+        description: 'Manually trigger workflow execution',
+        defaults: {
+          name: 'Manual Trigger',
+        },
+        inputs: [],
+        outputs: ['main'],
+        properties: [],
+      },
+      async execute(this: INodeExecuteFunctions): Promise<any[]> {
+        // Manual trigger just passes through empty data to start the workflow
+        return [{ json: {} }];
+      },
+    };
+
+    this.registerNodeType(manualNode);
+  }
 
   private registerWebhookNode(): void {
     const webhookNode: INodeType = {

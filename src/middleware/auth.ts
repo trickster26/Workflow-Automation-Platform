@@ -51,7 +51,7 @@ export class AuthMiddleware {
         });
       }
 
-      if (user.status !== 'active') {
+      if (!user.isActive) {
         return res.status(401).json({
           error: 'Authentication failed',
           message: 'Account is not active',
@@ -74,9 +74,18 @@ export class AuthMiddleware {
         });
       }
       
+      if (error.message === 'Session not found' || error.message === 'Invalid token structure') {
+        return res.status(401).json({
+          error: 'Session invalid',
+          message: 'Your session has expired. Please logout and login again.',
+          code: 'SESSION_EXPIRED',
+        });
+      }
+      
       return res.status(401).json({
         error: 'Authentication failed',
-        message: 'Invalid token',
+        message: 'Please login again',
+        code: 'AUTH_FAILED',
       });
     }
   }
@@ -108,7 +117,7 @@ export class AuthMiddleware {
       // Get user from database
       const user = await UserModel.findByPk(payload.userId);
       
-      if (user && user.status === 'active') {
+      if (user && user.isActive) {
         req.user = user;
         req.sessionId = payload.sessionId;
       }
@@ -403,7 +412,7 @@ export function getUserId(req: AuthenticatedRequest): string | undefined {
 
 // Helper function to check if user is authenticated
 export function isAuthenticated(req: AuthenticatedRequest): boolean {
-  return !!req.user && req.user.status === 'active';
+  return !!req.user && req.user.isActive;
 }
 
 // Helper function to check if user is admin

@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export interface IUser {
   id: number;
@@ -20,17 +21,18 @@ export interface IUserCreationAttributes extends Optional<IUser,
 > {}
 
 export class UserModel extends Model<IUser, IUserCreationAttributes> implements IUser {
-  public id!: number;
-  public email!: string;
-  public username!: string;
-  public password!: string;
-  public firstName?: string;
-  public lastName?: string;
-  public role!: 'admin' | 'user';
-  public isActive!: boolean;
-  public lastLogin?: Date;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  // Remove public class fields to avoid shadowing Sequelize's getters/setters
+  declare id: number;
+  declare email: string;
+  declare username: string;
+  declare password: string;
+  declare firstName?: string;
+  declare lastName?: string;
+  declare role: 'admin' | 'user';
+  declare isActive: boolean;
+  declare lastLogin?: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
   // Instance methods
   public async comparePassword(candidatePassword: string): Promise<boolean> {
@@ -107,6 +109,14 @@ export class UserModel extends Model<IUser, IUserCreationAttributes> implements 
       isActive: this.isActive,
       lastLogin: this.lastLogin,
     };
+  }
+
+  public generateEmailVerificationToken(): string {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  public generatePasswordResetToken(): string {
+    return crypto.randomBytes(32).toString('hex');
   }
 }
 
