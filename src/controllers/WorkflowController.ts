@@ -220,7 +220,7 @@ export class WorkflowController {
         return res.status(404).json({ error: 'Workflow not found' });
       }
 
-      await workflow.update({ active: true });
+      await workflow.update({ isActive: true });
       const workflowData = workflow.toJSON() as IWorkflow;
 
       // Activate triggers
@@ -257,7 +257,7 @@ export class WorkflowController {
         return res.status(404).json({ error: 'Workflow not found' });
       }
 
-      await workflow.update({ active: false });
+      await workflow.update({ isActive: false });
       const workflowData = workflow.toJSON() as IWorkflow;
 
       // Remove triggers

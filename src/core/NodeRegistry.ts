@@ -74,12 +74,50 @@ export class NodeRegistry {
     const { EmailNode } = require('./integrations/EmailNode');
     const { DatabaseNode } = require('./integrations/DatabaseNode');
     const { ExportNode } = require('./integrations/ExportNode');
+    const { FileUploadNode } = require('./integrations/FileUploadNode');
+    const { FileDownloadNode } = require('./integrations/FileDownloadNode');
+    const { PDFGeneratorNode } = require('./integrations/PDFGeneratorNode');
+    const { PostgreSQLNode } = require('./integrations/PostgreSQLNode');
+    const { MongoDBNode } = require('./integrations/MongoDBNode');
+    const { RedisNode } = require('./integrations/RedisNode');
+    const { NotificationNode } = require('./integrations/NotificationNode');
+    const { AdvancedTransformNode } = require('./integrations/AdvancedTransformNode');
+    const { DataValidationNode } = require('./integrations/DataValidationNode');
+    const { DataCleansingNode } = require('./integrations/DataCleansingNode');
+    
+    // Import third-party integration nodes
+    const { SlackNode } = require('./integrations/SlackNode');
+    const { GoogleSheetsNode } = require('./integrations/GoogleSheetsNode');
+    const { GitHubNode } = require('./integrations/GitHubNode');
+    const { AWSNode } = require('./integrations/AWSNode');
+    const { StripeNode } = require('./integrations/StripeNode');
+    const { TwilioNode } = require('./integrations/TwilioNode');
+    const { Office365Node } = require('./integrations/Office365Node');
     
     // Register advanced nodes
     this.registerNodeType(HttpRequestNode);
     this.registerNodeType(EmailNode);
     this.registerNodeType(DatabaseNode);
     this.registerNodeType(ExportNode);
+    this.registerNodeType(FileUploadNode);
+    this.registerNodeType(FileDownloadNode);
+    this.registerNodeType(PDFGeneratorNode);
+    this.registerNodeType(PostgreSQLNode);
+    this.registerNodeType(MongoDBNode);
+    this.registerNodeType(RedisNode);
+    this.registerNodeType(NotificationNode);
+    this.registerNodeType(AdvancedTransformNode);
+    this.registerNodeType(DataValidationNode);
+    this.registerNodeType(DataCleansingNode);
+    
+    // Register third-party integration nodes
+    this.registerNodeType(SlackNode);
+    this.registerNodeType(GoogleSheetsNode);
+    this.registerNodeType(new GitHubNode());
+    this.registerNodeType(new AWSNode());
+    this.registerNodeType(new StripeNode());
+    this.registerNodeType(new TwilioNode());
+    this.registerNodeType(new Office365Node());
     
     // Register basic nodes
     this.registerManualTriggerNode();

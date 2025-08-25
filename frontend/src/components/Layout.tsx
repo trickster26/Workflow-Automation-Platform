@@ -7,7 +7,9 @@ import {
   MenuIcon,
   XIcon,
   LogOutIcon,
-  UserIcon
+  UserIcon,
+  FileTextIcon,
+  PlugIcon
 } from 'lucide-react';
 import { useState } from 'react';
 import clsx from 'clsx';
@@ -16,7 +18,9 @@ import { useAuth } from '@/contexts/AuthContext';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3Icon },
   { name: 'Workflows', href: '/workflows', icon: WorkflowIcon },
+  { name: 'Templates', href: '/templates', icon: FileTextIcon },
   { name: 'Executions', href: '/executions', icon: PlayIcon },
+  { name: 'Integrations', href: '/integrations', icon: PlugIcon },
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 

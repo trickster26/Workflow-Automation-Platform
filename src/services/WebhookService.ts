@@ -56,6 +56,11 @@ export class WebhookService extends EventEmitter {
 
       logger.info(`Initialized ${webhooks.length} webhooks`);
     } catch (error: any) {
+      // If the table doesn't exist yet, just log a warning and continue
+      if (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_NO_SUCH_TABLE') {
+        logger.warn('Webhooks table does not exist yet. Skipping webhook initialization.');
+        return;
+      }
       logger.error('Error initializing webhooks:', error);
     }
   }

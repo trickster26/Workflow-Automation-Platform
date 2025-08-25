@@ -44,6 +44,7 @@ export class Database {
     const { initWebhookModel } = await import('../models/Webhook.model');
     const { initTriggerModel } = await import('../models/Trigger.model');
     const { initExecutionLogModel } = await import('../models/ExecutionLog.model');
+    const { initCredentialModel } = await import('../models/Credential');
 
     const Workflow = initWorkflowModel(this.sequelize);
     const Execution = initExecutionModel(this.sequelize);
@@ -51,6 +52,7 @@ export class Database {
     const Webhook = initWebhookModel(this.sequelize);
     const Trigger = initTriggerModel(this.sequelize);
     const ExecutionLog = initExecutionLogModel(this.sequelize);
+    const Credential = initCredentialModel(this.sequelize);
 
     User.hasMany(Workflow, { foreignKey: 'userId', as: 'workflows' });
     Workflow.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -66,6 +68,9 @@ export class Database {
 
     Execution.hasMany(ExecutionLog, { foreignKey: 'executionId', as: 'logs' });
     ExecutionLog.belongsTo(Execution, { foreignKey: 'executionId', as: 'execution' });
+
+    User.hasMany(Credential, { foreignKey: 'userId', as: 'credentials' });
+    Credential.belongsTo(User, { foreignKey: 'userId', as: 'user' });
   }
 
   public async connect(): Promise<void> {

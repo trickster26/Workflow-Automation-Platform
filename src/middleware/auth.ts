@@ -419,3 +419,17 @@ export function isAuthenticated(req: AuthenticatedRequest): boolean {
 export function isAdmin(req: AuthenticatedRequest): boolean {
   return !!req.user && req.user.role === 'admin';
 }
+
+// Export middleware functions for direct use
+export const authenticate = AuthMiddleware.authenticate;
+export const authenticateToken = AuthMiddleware.authenticate; // Alias for compatibility
+export const optionalAuth = AuthMiddleware.optionalAuth;
+export const requirePermission = AuthMiddleware.requirePermission;
+export const requireRole = AuthMiddleware.requireRole;
+export const requireAdmin = AuthMiddleware.requireAdmin;
+export const validateApiKey = AuthMiddleware.validateApiKey;
+export const rateLimit = AuthMiddleware.rateLimit;
+export const securityHeaders = AuthMiddleware.securityHeaders;
+export const corsWithAuth = AuthMiddleware.corsWithAuth;
+export const auditLog = AuthMiddleware.auditLog;
+export const validateWorkflowOwnership = AuthMiddleware.validateWorkflowOwnership;

@@ -20,8 +20,19 @@ import { UserController } from './controllers/UserController';
 import { AuthMiddleware } from './middleware/auth';
 import monitoringRoutes from './routes/monitoring';
 import exportRoutes from './routes/exportRoutes';
+import fileRoutes from './routes/fileRoutes';
+import pdfRoutes from './routes/pdfRoutes';
+import databaseRoutes from './routes/databaseRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
+import credentialRoutes from './routes/credentialRoutes';
+// import imageRoutes from './routes/imageRoutes'; // Temporarily disabled due to Sharp dependency
+import notificationRoutes from './routes/notificationRoutes';
+import transformationRoutes from './routes/transformationRoutes';
+import { createIntegrationRoutes } from './routes/integrationRoutes';
+import { IntegrationConfigService } from './services/IntegrationConfigService';
 import { executionMonitoringService } from './services/ExecutionMonitoringService';
 import { executionLoggingService } from './services/ExecutionLoggingService';
+import templateRoutes from './routes/templateRoutes';
 
 const logger = createLogger('App');
 
@@ -111,6 +122,37 @@ class WorkflowAutomationPlatform {
     
     // Data Export Routes
     this.app.use('/api/exports', exportRoutes);
+    
+    // File Management Routes
+    this.app.use('/api/files', fileRoutes);
+    
+    // PDF Generation Routes
+    this.app.use('/api/pdfs', pdfRoutes);
+    
+    // Database Management Routes
+    this.app.use('/api/database', databaseRoutes);
+    
+    // Dashboard Analytics Routes
+    this.app.use('/api/dashboard', dashboardRoutes);
+    
+    // Credential Management Routes
+    this.app.use('/api/credentials', credentialRoutes);
+    
+    // Image Processing Routes
+    // this.app.use('/api/images', imageRoutes); // Temporarily disabled due to Sharp dependency
+    
+    // Notification Routes
+    this.app.use('/api/notifications', notificationRoutes);
+    
+    // Data Transformation Routes
+    this.app.use('/api/transform', transformationRoutes);
+    
+    // Integration Management Routes
+    const integrationConfigService = new IntegrationConfigService(db.sequelize);
+    this.app.use('/api/integrations', createIntegrationRoutes(integrationConfigService));
+    
+    // Template Management Routes
+    this.app.use('/api/templates', templateRoutes);
 
     this.app.get('/health', async (req, res) => {
       try {
@@ -455,8 +497,11 @@ class WorkflowAutomationPlatform {
 
       await db.connect();
       
+      // Sync database to create missing tables
       if (config.nodeEnv === 'development') {
-        await db.sync(false);
+        logger.info('Synchronizing database schema...');
+        await db.sync(false); // Use false to avoid dropping existing tables
+        logger.info('Database schema synchronized successfully');
       }
 
       await dataMigrationService.runMigrations();
