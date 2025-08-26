@@ -27,6 +27,10 @@ interface WorkflowToolbarProps {
   onToggleFullscreen?: () => void;
   isFullscreen?: boolean;
   isReadOnly?: boolean;
+  workflowName?: string;
+  workflowDescription?: string;
+  onNameChange?: (name: string) => void;
+  onDescriptionChange?: (description: string) => void;
 }
 
 export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
@@ -41,6 +45,10 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   onToggleFullscreen,
   isFullscreen = false,
   isReadOnly = false,
+  workflowName,
+  workflowDescription,
+  onNameChange,
+  onDescriptionChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +70,24 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
             </>
           )}
         </div>
+        {!isReadOnly && onNameChange && onDescriptionChange && (
+          <div className="workflow-meta-fields">
+            <input
+              type="text"
+              className="workflow-name-field"
+              value={workflowName || ''}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder="Workflow Name"
+            />
+            <input
+              type="text"
+              className="workflow-description-field"
+              value={workflowDescription || ''}
+              onChange={(e) => onDescriptionChange(e.target.value)}
+              placeholder="Workflow Description"
+            />
+          </div>
+        )}
       </div>
 
       <div className="toolbar-section">

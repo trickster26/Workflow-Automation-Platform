@@ -8,29 +8,31 @@
 .workflow-editor-header {
   background: white;
   border-bottom: 1px solid #e5e7eb;
-  padding: 16px 24px;
+  padding: 12px 24px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .btn-back {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 6px 12px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #374151;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .btn-back:hover {
@@ -38,49 +40,20 @@
   border-color: #d1d5db;
 }
 
-.workflow-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.workflow-name-input,
-.workflow-description-input {
-  padding: 8px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.workflow-name-input {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.workflow-description-input {
-  color: #6b7280;
-}
-
-.workflow-name-input:focus,
-.workflow-description-input:focus {
-  border-color: #6366f1;
-}
 
 .saving-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 6px 12px;
   background: #fef3c7;
   color: #92400e;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 4px;
+  font-size: 13px;
   font-weight: 500;
   animation: pulse 1.5s ease-in-out infinite;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 @keyframes pulse {
@@ -124,4 +97,16 @@
 .workflow-editor-loading p {
   color: #6b7280;
   font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .workflow-editor-header {
+    padding: 10px 16px;
+  }
+  
+  .btn-back {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }
