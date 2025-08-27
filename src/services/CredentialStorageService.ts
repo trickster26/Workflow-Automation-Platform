@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import { Credential, User } from '../models';
-import { ICredential } from '../models/Credential';
+import { Credential, ICredential } from '../models/Credential';
+import { User } from '../models/User';
 import { createLogger } from '../utils/logger';
 import { Op } from 'sequelize';
 import axios from 'axios';
@@ -254,6 +254,63 @@ export class CredentialStorageService {
             { value: 'false', label: 'No' },
             { value: 'true', label: 'Yes' },
           ],
+        },
+      ],
+    });
+
+    // SMTP/Email Credentials
+    types.set('smtp', {
+      type: 'smtp',
+      name: 'SMTP',
+      description: 'SMTP server credentials for sending emails',
+      testable: true,
+      fields: [
+        {
+          name: 'host',
+          label: 'SMTP Host',
+          type: 'text',
+          required: true,
+          placeholder: 'smtp.gmail.com',
+        },
+        {
+          name: 'port',
+          label: 'Port',
+          type: 'number',
+          required: true,
+          placeholder: '587',
+        },
+        {
+          name: 'secure',
+          label: 'Use SSL/TLS',
+          type: 'select',
+          required: true,
+          options: [
+            { value: 'false', label: 'No (STARTTLS)' },
+            { value: 'true', label: 'Yes (SSL/TLS)' },
+          ],
+        },
+        {
+          name: 'username',
+          label: 'Username',
+          type: 'text',
+          required: true,
+          placeholder: 'your-email@gmail.com',
+        },
+        {
+          name: 'password',
+          label: 'Password',
+          type: 'password',
+          required: true,
+          placeholder: 'Your email password or app password',
+          encrypted: true,
+        },
+        {
+          name: 'fromName',
+          label: 'From Name',
+          type: 'text',
+          required: false,
+          placeholder: 'Your Name',
+          help: 'Display name for outgoing emails',
         },
       ],
     });
@@ -700,6 +757,9 @@ export class CredentialStorageService {
         case 'database':
           result = await this.testDatabase(decryptedData);
           break;
+        case 'smtp':
+          result = await this.testSMTP(decryptedData);
+          break;
         case 'ssh':
           result = await this.testSSH(decryptedData);
           break;
@@ -840,6 +900,34 @@ export class CredentialStorageService {
       return {
         success: false,
         message: `Database connection failed: ${error.message}`,
+        details: { error: error.message },
+      };
+    }
+  }
+
+  private async testSMTP(data: any): Promise<TestResult> {
+    const nodemailer = require('nodemailer');
+    
+    try {
+      // Create SMTP transporter
+      const transporter = nodemailer.createTransporter({
+        host: data.host,
+        port: data.port || 587,
+        secure: data.secure === 'true' || data.port === 465,
+        auth: {
+          user: data.username,
+          pass: data.password,
+        },
+      });
+
+      // Test connection
+      await transporter.verify();
+      
+      return { success: true, message: 'SMTP connection successful' };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: `SMTP connection failed: ${error.message}`,
         details: { error: error.message },
       };
     }

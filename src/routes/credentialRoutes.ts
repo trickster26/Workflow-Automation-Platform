@@ -320,6 +320,9 @@ router.post('/test', authenticate, async (req: Request, res: Response) => {
       case 'database':
         testResult = await credentialStorageService['testDatabase'](data);
         break;
+      case 'smtp':
+        testResult = await credentialStorageService['testSMTP'](data);
+        break;
       case 'ssh':
         testResult = await credentialStorageService['testSSH'](data);
         break;

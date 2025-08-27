@@ -1,8 +1,9 @@
 import { INodeType, INodeExecuteFunctions } from '../NodeRegistry';
+import { INodeTypeDescription } from '../../types/workflow.types';
 import { notificationService } from '../../services/NotificationService';
 
-export const NotificationNode: INodeType = {
-  description: {
+export class NotificationNode implements INodeType {
+  description: INodeTypeDescription = {
     displayName: 'Notification',
     name: 'notification',
     group: ['communication'],
@@ -53,19 +54,11 @@ export const NotificationNode: INodeType = {
         type: 'string',
         default: '',
         description: 'Notification subject (required for email)',
-        displayOptions: {
-          show: {
-            channelType: ['email'],
-          },
-        },
       },
       {
         name: 'message',
         displayName: 'Message',
         type: 'string',
-        typeOptions: {
-          rows: 4,
-        },
         default: '',
         required: true,
         description: 'Notification message content',
@@ -93,7 +86,7 @@ export const NotificationNode: INodeType = {
       {
         name: 'scheduled',
         displayName: 'Schedule For Later',
-        type: 'dateTime',
+        type: 'string',
         default: '',
         description: 'Schedule notification for future delivery (optional)',
       },
@@ -110,11 +103,6 @@ export const NotificationNode: INodeType = {
         type: 'number',
         default: 3,
         description: 'Maximum number of retry attempts',
-        displayOptions: {
-          show: {
-            retryOnFailure: [true],
-          },
-        },
       },
       {
         name: 'condition',
@@ -124,7 +112,7 @@ export const NotificationNode: INodeType = {
         description: 'JavaScript expression to determine if notification should be sent (optional)',
       },
     ],
-  },
+  };
 
   async execute(this: INodeExecuteFunctions): Promise<any[]> {
     const items = this.getInputData();
@@ -241,7 +229,7 @@ export const NotificationNode: INodeType = {
         });
 
       } catch (error) {
-        if (this.continueOnFail?.()) {
+        if (this.continueOnFail && this.continueOnFail()) {
           returnData.push({
             json: {
               ...item.json,
@@ -259,10 +247,9 @@ export const NotificationNode: INodeType = {
     }
 
     return returnData;
-  },
+  }
 
-  // Helper methods (these would normally be part of a base class)
-  evaluateCondition(condition: string, data: any): boolean {
+  private evaluateCondition(condition: string, data: any): boolean {
     try {
       // Create a safe evaluation context
       const context = {
@@ -293,9 +280,9 @@ export const NotificationNode: INodeType = {
     } catch (error) {
       return false;
     }
-  },
+  }
 
-  processTemplate(template: string, data: any): string {
+  private processTemplate(template: string, data: any): string {
     if (!template) return template;
     
     try {
@@ -317,9 +304,9 @@ export const NotificationNode: INodeType = {
     } catch (error) {
       return template;
     }
-  },
+  }
 
-  sleep(ms: number): Promise<void> {
+  private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-  },
-};
+  }
+}

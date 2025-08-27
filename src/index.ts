@@ -21,7 +21,7 @@ import { AuthMiddleware } from './middleware/auth';
 import monitoringRoutes from './routes/monitoring';
 import exportRoutes from './routes/exportRoutes';
 import fileRoutes from './routes/fileRoutes';
-// import pdfRoutes from './routes/pdfRoutes'; // Commented out due to dependency issues
+import pdfRoutes from './routes/pdfRoutes';
 import databaseRoutes from './routes/databaseRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import credentialRoutes from './routes/credentialRoutes';
@@ -127,7 +127,7 @@ class WorkflowAutomationPlatform {
     this.app.use('/api/files', fileRoutes);
     
     // PDF Generation Routes
-    // this.app.use('/api/pdfs', pdfRoutes); // Commented out due to dependency issues
+    this.app.use('/api/pdfs', pdfRoutes);
     
     // Database Management Routes
     this.app.use('/api/database', databaseRoutes);
@@ -185,6 +185,14 @@ class WorkflowAutomationPlatform {
 
     this.app.get('/api/node-types', (req, res) => {
       try {
+        // Clear require cache for NodeRegistry and all integration modules
+        const cacheKeys = Object.keys(require.cache);
+        cacheKeys.forEach(key => {
+          if (key.includes('NodeRegistry') || key.includes('integrations/')) {
+            delete require.cache[key];
+          }
+        });
+        
         const { nodeRegistry } = require('./core/NodeRegistry');
         const nodeTypes = nodeRegistry.getAllNodeTypes();
         res.json(nodeTypes);
