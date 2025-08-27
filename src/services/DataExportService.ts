@@ -2,7 +2,9 @@ import * as XLSX from 'xlsx';
 import * as csv from 'csv-writer';
 import * as fs from 'fs';
 import * as path from 'path';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('DataExportService');
 
 export interface ExportOptions {
   format: 'xlsx' | 'csv' | 'json';

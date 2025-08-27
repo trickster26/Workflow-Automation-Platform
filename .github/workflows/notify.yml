@@ -1,0 +1,111 @@
+name: Notifications
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+jobs:
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    
+    steps:
+    - name: Get PR details
+      id: pr
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: pullRequests } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            head: `${context.repo.owner}:${context.ref}`,
+            state: 'open'
+          });
+          
+          if (pullRequests.length > 0) {
+            const pr = pullRequests[0];
+            core.setOutput('pr_number', pr.number);
+            core.setOutput('pr_title', pr.title);
+            core.setOutput('pr_author', pr.user.login);
+          }
+
+    - name: Comment on PR about failure
+      if: steps.pr.outputs.pr_number
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: ${{ steps.pr.outputs.pr_number }},
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## ❌ CI Pipeline Failed
+            
+            Hi @${{ steps.pr.outputs.pr_author }}, the CI pipeline failed for this PR.
+            
+            **Failed Workflow:** ${{ github.event.workflow_run.name }}
+            **Branch:** \`${{ github.event.workflow_run.head_branch }}\`
+            **Run:** [View Details](${{ github.event.workflow_run.html_url }})
+            
+            ### Quick Debug Steps:
+            1. Check the workflow logs above
+            2. Run tests locally: \`npm test\`
+            3. Fix failing tests and push again
+            
+            The PR is blocked until all checks pass ✅`
+          });
+
+    - name: Create issue for repeated failures
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const title = 'CI Pipeline Failing Repeatedly';
+          const body = `## 🚨 CI Pipeline Health Alert
+          
+          The CI pipeline has failed multiple times recently.
+          
+          **Latest Failure:**
+          - Workflow: ${{ github.event.workflow_run.name }}
+          - Branch: ${{ github.event.workflow_run.head_branch }}
+          - Time: ${{ github.event.workflow_run.created_at }}
+          - [View Run](${{ github.event.workflow_run.html_url }})
+          
+          **Action Required:**
+          - [ ] Review failing tests
+          - [ ] Check for infrastructure issues
+          - [ ] Update dependencies if needed
+          - [ ] Consider improving test stability
+          
+          cc: @team-leads`;
+          
+          // Only create if no similar issue exists
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: 'ci-failure',
+            state: 'open'
+          });
+          
+          if (issues.length === 0) {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['ci-failure', 'priority-high']
+            });
+          }
+
+  notify-on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Success notification
+      uses: actions/github-script@v6
+      with:
+        script: |
+          console.log('✅ CI Pipeline succeeded!');
+          console.log('Branch: ${{ github.event.workflow_run.head_branch }}');
+          console.log('All tests passed and build completed successfully.');

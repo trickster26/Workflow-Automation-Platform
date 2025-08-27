@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { UserModel } from '../models/User.model';
+import { User as UserModel } from '../models';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createLogger } from '../utils/logger';
 import { Op } from 'sequelize';

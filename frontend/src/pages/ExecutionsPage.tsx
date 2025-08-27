@@ -177,10 +177,10 @@ export function ExecutionsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {execution.workflowData.name}
+                            {execution.workflowData?.name || execution.workflow?.name || 'Unknown Workflow'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {execution.id.slice(0, 8)}...
+                            ID: {String(execution.id).slice(0, 8)}...
                           </div>
                         </div>
                       </td>

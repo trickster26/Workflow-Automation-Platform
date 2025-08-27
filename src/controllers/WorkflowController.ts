@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { WorkflowModel } from '../models/Workflow.model';
+import { Workflow as WorkflowModel } from '../models';
 import { webhookService } from '../services/WebhookService';
 import { triggerService } from '../services/TriggerService';
 import { IWorkflow, NodeType } from '../types/workflow.types';
@@ -220,7 +220,7 @@ export class WorkflowController {
         return res.status(404).json({ error: 'Workflow not found' });
       }
 
-      await workflow.update({ active: true });
+      await workflow.update({ isActive: true });
       const workflowData = workflow.toJSON() as IWorkflow;
 
       // Activate triggers
@@ -257,7 +257,7 @@ export class WorkflowController {
         return res.status(404).json({ error: 'Workflow not found' });
       }
 
-      await workflow.update({ active: false });
+      await workflow.update({ isActive: false });
       const workflowData = workflow.toJSON() as IWorkflow;
 
       // Remove triggers

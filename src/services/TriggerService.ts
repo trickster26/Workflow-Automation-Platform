@@ -1,8 +1,7 @@
 import { EventEmitter } from 'events';
 import * as cron from 'node-cron';
 import Bull, { Queue } from 'bull';
-import { TriggerModel } from '../models/Trigger.model';
-import { WorkflowModel } from '../models/Workflow.model';
+import { Trigger as TriggerModel, Workflow as WorkflowModel } from '../models';
 import { executionService } from './ExecutionService';
 import { ITriggerData, TriggerType, IWorkflow, INode, NodeType } from '../types/workflow.types';
 import config from '../config';
@@ -112,6 +111,12 @@ export class TriggerService extends EventEmitter {
 
       logger.info(`Initialized ${triggers.length} active triggers`);
     } catch (error: any) {
+      // If the table doesn't exist yet, just log a warning and continue
+      if (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_NO_SUCH_TABLE') {
+        logger.warn('Triggers table does not exist yet. Skipping trigger initialization.');
+        this.startPolling(); // Still start polling for future triggers
+        return;
+      }
       logger.error('Error initializing triggers:', error);
       throw error;
     }
@@ -121,12 +126,14 @@ export class TriggerService extends EventEmitter {
     try {
       switch (triggerData.type) {
         case TriggerType.SCHEDULE:
+        case 'cron':  // Handle both 'schedule' and 'cron' types
           await this.registerScheduleTrigger(triggerData);
           break;
         case TriggerType.EVENT:
           await this.registerEventTrigger(triggerData);
           break;
         case TriggerType.WEBHOOK:
+        case 'webhook':  // Handle lowercase version
           await this.registerWebhookTrigger(triggerData);
           break;
         case TriggerType.EMAIL:
@@ -134,6 +141,14 @@ export class TriggerService extends EventEmitter {
           break;
         case TriggerType.FILE_WATCH:
           await this.registerFileWatchTrigger(triggerData);
+          break;
+        case TriggerType.MANUAL:
+        case 'manual':  // Handle lowercase version
+          // Manual triggers don't need registration
+          logger.info(`Manual trigger registered`, {
+            triggerId: triggerData.id,
+            workflowId: triggerData.workflowId,
+          });
           break;
         default:
           logger.warn(`Unknown trigger type: ${triggerData.type}`);
@@ -145,7 +160,12 @@ export class TriggerService extends EventEmitter {
   }
 
   private async registerScheduleTrigger(triggerData: ITriggerData): Promise<void> {
-    const schedule = triggerData.schedule;
+    // Try to get schedule from multiple possible locations
+    const schedule = triggerData.schedule || 
+                    triggerData.config?.cronExpression || 
+                    triggerData.config?.schedule ||
+                    triggerData.metadata?.cronExpression;
+                    
     if (!schedule) {
       throw new Error(`Schedule trigger ${triggerData.id} missing schedule`);
     }
@@ -159,11 +179,12 @@ export class TriggerService extends EventEmitter {
       workflowId: triggerData.workflowId,
       nodeId: triggerData.nodeId,
       cronExpression: schedule,
-      timezone: triggerData.metadata?.timezone || 'UTC',
-      active: triggerData.active,
+      timezone: triggerData.metadata?.timezone || triggerData.config?.timezone || 'UTC',
+      active: triggerData.active ?? triggerData.isActive ?? true,
     };
 
-    if (triggerData.active) {
+    const isActive = triggerData.active ?? triggerData.isActive ?? true;
+    if (isActive) {
       const task = cron.schedule(schedule, async () => {
         try {
           await this.triggerQueue.add('execute-trigger', {
@@ -501,20 +522,37 @@ export class TriggerService extends EventEmitter {
     let schedule: string | undefined;
     let event: string | undefined;
     let metadata: Record<string, any> = {};
+    let config: Record<string, any> = {};
 
     switch (node.type) {
       case NodeType.SCHEDULE:
-        triggerType = TriggerType.SCHEDULE;
-        schedule = node.parameters.cronExpression || '0 * * * *';
-        metadata.timezone = node.parameters.timezone || 'UTC';
+        triggerType = 'cron' as any;  // Map SCHEDULE to 'cron' for database
+        schedule = node.parameters?.cronExpression || '*/5 * * * *';  // Default: every 5 minutes
+        metadata.timezone = node.parameters?.timezone || 'UTC';
+        config = {
+          cronExpression: schedule,
+          timezone: metadata.timezone,
+        };
+        logger.info(`Creating schedule trigger with cron: ${schedule}`, {
+          nodeId: node.id,
+          workflowId,
+          parameters: node.parameters
+        });
         break;
       case NodeType.WEBHOOK:
-        triggerType = TriggerType.WEBHOOK;
+        triggerType = 'webhook' as any;  // Use lowercase 'webhook' for database
         metadata.path = node.parameters.path;
         metadata.method = node.parameters.method || 'POST';
+        config = {
+          path: metadata.path,
+          method: metadata.method,
+        };
         break;
       case NodeType.TRIGGER:
-        triggerType = TriggerType.MANUAL;
+        triggerType = 'manual' as any;  // Use lowercase 'manual' for database
+        config = {
+          type: 'manual',
+        };
         break;
       default:
         return;
@@ -528,6 +566,7 @@ export class TriggerService extends EventEmitter {
       event,
       isActive: true,
       metadata,
+      config,
     };
 
     const trigger = await TriggerModel.create(triggerData as any);

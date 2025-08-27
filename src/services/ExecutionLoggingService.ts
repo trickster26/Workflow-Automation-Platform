@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { ExecutionLogModel, IExecutionLogCreationAttributes } from '../models/ExecutionLog.model';
+import { ExecutionLog as ExecutionLogModel } from '../models';
+import { IExecutionLogCreationAttributes } from '../models/ExecutionLog.model';
 import { createLogger } from '../utils/logger';
 import { getWebSocketService } from './WebSocketService';
 

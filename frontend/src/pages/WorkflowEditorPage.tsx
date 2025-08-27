@@ -172,22 +172,6 @@ const WorkflowEditorPage: React.FC = () => {
           >
             ← Back to Workflows
           </button>
-          <div className="workflow-info">
-            <input
-              type="text"
-              className="workflow-name-input"
-              value={workflow?.name || 'New Workflow'}
-              onChange={(e) => setWorkflow({ ...workflow, name: e.target.value })}
-              placeholder="Workflow Name"
-            />
-            <input
-              type="text"
-              className="workflow-description-input"
-              value={workflow?.description || ''}
-              onChange={(e) => setWorkflow({ ...workflow, description: e.target.value })}
-              placeholder="Workflow Description"
-            />
-          </div>
           {saving && <span className="saving-indicator">Saving...</span>}
         </div>
       </div>
@@ -200,6 +184,10 @@ const WorkflowEditorPage: React.FC = () => {
           onSave={handleSave}
           onTest={handleTest}
           readOnly={false}
+          workflowName={workflow?.name || 'New Workflow'}
+          workflowDescription={workflow?.description || ''}
+          onWorkflowNameChange={(name) => setWorkflow({ ...workflow, name })}
+          onWorkflowDescriptionChange={(description) => setWorkflow({ ...workflow, description })}
         />
       </div>
 

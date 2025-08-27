@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { authService } from '../services/AuthService';
-import { UserModel } from '../models/User.model';
+import { User as UserModel } from '../models';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { createLogger } from '../utils/logger';
 
