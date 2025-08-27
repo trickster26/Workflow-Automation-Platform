@@ -185,6 +185,14 @@ class WorkflowAutomationPlatform {
 
     this.app.get('/api/node-types', (req, res) => {
       try {
+        // Clear require cache for NodeRegistry and all integration modules
+        const cacheKeys = Object.keys(require.cache);
+        cacheKeys.forEach(key => {
+          if (key.includes('NodeRegistry') || key.includes('integrations/')) {
+            delete require.cache[key];
+          }
+        });
+        
         const { nodeRegistry } = require('./core/NodeRegistry');
         const nodeTypes = nodeRegistry.getAllNodeTypes();
         res.json(nodeTypes);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Node } from 'reactflow';
-import { FaTimes, FaSave, FaDatabase, FaCheck, FaSpinner, FaEnvelope, FaFileUpload, FaFileDownload, FaFolder, FaCloud, FaAws, FaCodeBranch, FaPlus, FaTrash, FaSyncAlt, FaListUl, FaStopwatch, FaClock, FaExchangeAlt, FaFilter, FaCopy, FaRandom } from 'react-icons/fa';
+import { FaTimes, FaSave, FaDatabase, FaCheck, FaSpinner, FaEnvelope, FaFileUpload, FaFileDownload, FaFolder, FaCloud, FaAws, FaCodeBranch, FaPlus, FaTrash, FaSyncAlt, FaListUl, FaStopwatch, FaClock, FaExchangeAlt, FaFilter, FaCopy, FaRandom, FaExpand, FaLayerGroup, FaObjectGroup, FaBrain, FaRobot, FaEye, FaMicrophone, FaLanguage, FaChartLine, FaBell, FaSms, FaSlack, FaDiscord, FaMicrosoft, FaMobile, FaGlobe, FaChartBar, FaChartPie, FaTable, FaCalculator, FaSearch, FaDownload, FaFileExport } from 'react-icons/fa';
 import { api } from '../../services/api';
 import './NodeConfigPanel.css';
 
@@ -2856,6 +2856,2668 @@ function transform(data) {
   }
 }`}</pre>
                 </div>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'merge':
+        return (
+          <>
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaCodeBranch /> Merge Configuration
+              </h4>
+
+              <div className="form-group">
+                <label>Merge Mode</label>
+                <select
+                  value={formData.parameters.mode || 'append'}
+                  onChange={(e) => handleParameterChange('mode', e.target.value)}
+                >
+                  <option value="append">Append - Concatenate data from inputs</option>
+                  <option value="mergeByIndex">Merge by Index - Combine items at same positions</option>
+                  <option value="mergeByKey">Merge by Key - Combine items with matching properties</option>
+                  <option value="multiplex">Multiplex - Create combinations of all inputs</option>
+                  <option value="combine">Combine - Various combination strategies</option>
+                  <option value="wait">Wait - Wait for data from all inputs</option>
+                  <option value="chooseBranch">Choose Branch - Select specific input</option>
+                </select>
+                <p className="help-text">How to merge data from multiple inputs</p>
+              </div>
+
+              {/* Merge by Key Settings */}
+              {formData.parameters.mode === 'mergeByKey' && (
+                <>
+                  <div className="form-group">
+                    <label>Property Name (Input 1)</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.propertyName1 || 'id'}
+                      onChange={(e) => handleParameterChange('propertyName1', e.target.value)}
+                      placeholder="id"
+                    />
+                    <p className="help-text">Property to match on in first input</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Property Name (Input 2)</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.propertyName2 || 'id'}
+                      onChange={(e) => handleParameterChange('propertyName2', e.target.value)}
+                      placeholder="id"
+                    />
+                    <p className="help-text">Property to match on in second input</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Output Data From</label>
+                    <select
+                      value={formData.parameters.outputDataFrom || 'both'}
+                      onChange={(e) => handleParameterChange('outputDataFrom', e.target.value)}
+                    >
+                      <option value="both">Both Inputs Merged</option>
+                      <option value="input1">Input 1 Only</option>
+                      <option value="input2">Input 2 Only</option>
+                      <option value="enrichInput1">Input 1 Enriched with Input 2</option>
+                      <option value="enrichInput2">Input 2 Enriched with Input 1</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeUnmatched || false}
+                        onChange={(e) => handleParameterChange('includeUnmatched', e.target.checked)}
+                      />
+                      Include Unmatched Items
+                    </label>
+                    <p className="help-text">Include items that don't have matches in both inputs</p>
+                  </div>
+                </>
+              )}
+
+              {/* Merge by Index Settings */}
+              {formData.parameters.mode === 'mergeByIndex' && (
+                <div className="form-group">
+                  <label>Join Type</label>
+                  <select
+                    value={formData.parameters.join || 'inner'}
+                    onChange={(e) => handleParameterChange('join', e.target.value)}
+                  >
+                    <option value="inner">Inner Join - Only items present in both inputs</option>
+                    <option value="left">Left Join - All items from first input</option>
+                    <option value="right">Right Join - All items from second input</option>
+                    <option value="outer">Outer Join - All items from both inputs</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Choose Branch Settings */}
+              {formData.parameters.mode === 'chooseBranch' && (
+                <div className="form-group">
+                  <label>Choose Input</label>
+                  <select
+                    value={formData.parameters.chooseBranch || 0}
+                    onChange={(e) => handleParameterChange('chooseBranch', parseInt(e.target.value))}
+                  >
+                    <option value={0}>Input 1</option>
+                    <option value={1}>Input 2</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Combine Settings */}
+              {formData.parameters.mode === 'combine' && (
+                <>
+                  <div className="form-group">
+                    <label>Combine Mode</label>
+                    <select
+                      value={formData.parameters.combineMode || 'mergeByPosition'}
+                      onChange={(e) => handleParameterChange('combineMode', e.target.value)}
+                    >
+                      <option value="mergeByPosition">Merge By Position</option>
+                      <option value="mergeAllToSingle">Merge All to Single Object</option>
+                      <option value="addArray">Add as Arrays</option>
+                    </select>
+                  </div>
+                  {formData.parameters.combineMode === 'addArray' && (
+                    <div className="form-group">
+                      <label>Array Property Name</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.arrayPropertyName || 'data'}
+                        onChange={(e) => handleParameterChange('arrayPropertyName', e.target.value)}
+                        placeholder="data"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Append Settings */}
+              {formData.parameters.mode === 'append' && (
+                <>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.removeDuplicates || false}
+                        onChange={(e) => handleParameterChange('removeDuplicates', e.target.checked)}
+                      />
+                      Remove Duplicates
+                    </label>
+                  </div>
+                  {formData.parameters.removeDuplicates && (
+                    <div className="form-group">
+                      <label>Duplicate Check Property</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.duplicatePropertyName || 'id'}
+                        onChange={(e) => handleParameterChange('duplicatePropertyName', e.target.value)}
+                        placeholder="id"
+                      />
+                    </div>
+                  )}
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.addSource || false}
+                        onChange={(e) => handleParameterChange('addSource', e.target.checked)}
+                      />
+                      Add Source Field
+                    </label>
+                    <p className="help-text">Add field indicating which input the data came from</p>
+                  </div>
+                  {formData.parameters.addSource && (
+                    <div className="form-group">
+                      <label>Source Field Name</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.sourceFieldName || '_source'}
+                        onChange={(e) => handleParameterChange('sourceFieldName', e.target.value)}
+                        placeholder="_source"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Wait Settings */}
+              {formData.parameters.mode === 'wait' && (
+                <>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.waitForAll !== false}
+                        onChange={(e) => handleParameterChange('waitForAll', e.target.checked)}
+                      />
+                      Wait For All Inputs
+                    </label>
+                  </div>
+                  <div className="form-group">
+                    <label>Timeout (ms)</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.timeout || 0}
+                      onChange={(e) => handleParameterChange('timeout', parseInt(e.target.value) || 0)}
+                      placeholder="0 = no timeout"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* General Options */}
+              <div className="form-group">
+                <label>Property Name Clash Handling</label>
+                <select
+                  value={formData.parameters.clashHandling || 'preferInput1'}
+                  onChange={(e) => handleParameterChange('clashHandling', e.target.value)}
+                >
+                  <option value="preferInput1">Prefer Input 1</option>
+                  <option value="preferInput2">Prefer Input 2</option>
+                  <option value="renameSuffix">Rename with Suffix</option>
+                  <option value="mergeNested">Deep Merge Objects</option>
+                </select>
+              </div>
+
+              {formData.parameters.clashHandling === 'renameSuffix' && (
+                <>
+                  <div className="form-group">
+                    <label>Input 1 Suffix</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.suffixInput1 || '_1'}
+                      onChange={(e) => handleParameterChange('suffixInput1', e.target.value)}
+                      placeholder="_1"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Input 2 Suffix</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.suffixInput2 || '_2'}
+                      onChange={(e) => handleParameterChange('suffixInput2', e.target.value)}
+                      placeholder="_2"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        );
+
+      case 'filter':
+        return (
+          <>
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaFilter /> Filter Configuration
+              </h4>
+
+              <div className="form-group">
+                <label>Filter Mode</label>
+                <select
+                  value={formData.parameters.mode || 'condition'}
+                  onChange={(e) => handleParameterChange('mode', e.target.value)}
+                >
+                  <option value="condition">Condition-based Filter</option>
+                  <option value="jsonPath">JSONPath Filter</option>
+                  <option value="javascript">JavaScript Filter</option>
+                  <option value="schema">Schema Validation Filter</option>
+                  <option value="duplicate">Duplicate Filter</option>
+                  <option value="limit">Limit Results</option>
+                </select>
+              </div>
+
+              {/* Condition-based Filter */}
+              {formData.parameters.mode === 'condition' && (
+                <>
+                  <div className="form-group">
+                    <label>Logic Operator</label>
+                    <select
+                      value={formData.parameters.logicOperator || 'AND'}
+                      onChange={(e) => handleParameterChange('logicOperator', e.target.value)}
+                    >
+                      <option value="AND">AND - All conditions must be true</option>
+                      <option value="OR">OR - Any condition can be true</option>
+                    </select>
+                  </div>
+
+                  <div className="conditions-section">
+                    <div className="conditions-header">
+                      <label>Filter Conditions</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const conditions = formData.parameters.conditions || [];
+                          handleParameterChange('conditions', [
+                            ...conditions,
+                            { field: '', operator: 'equals', value: '', type: 'string' }
+                          ]);
+                        }}
+                        className="btn-add-condition"
+                      >
+                        + Add Condition
+                      </button>
+                    </div>
+
+                    {(formData.parameters.conditions || []).map((condition: any, index: number) => (
+                      <div key={index} className="condition-row">
+                        <div className="condition-fields">
+                          <input
+                            type="text"
+                            value={condition.field || ''}
+                            onChange={(e) => {
+                              const conditions = [...(formData.parameters.conditions || [])];
+                              conditions[index] = { ...conditions[index], field: e.target.value };
+                              handleParameterChange('conditions', conditions);
+                            }}
+                            placeholder="Field path (e.g., user.name)"
+                          />
+                          
+                          <select
+                            value={condition.operator || 'equals'}
+                            onChange={(e) => {
+                              const conditions = [...(formData.parameters.conditions || [])];
+                              conditions[index] = { ...conditions[index], operator: e.target.value };
+                              handleParameterChange('conditions', conditions);
+                            }}
+                          >
+                            <option value="equals">Equals</option>
+                            <option value="notEquals">Not Equals</option>
+                            <option value="contains">Contains</option>
+                            <option value="notContains">Not Contains</option>
+                            <option value="startsWith">Starts With</option>
+                            <option value="endsWith">Ends With</option>
+                            <option value="regex">Regex Match</option>
+                            <option value="greaterThan">Greater Than</option>
+                            <option value="lessThan">Less Than</option>
+                            <option value="greaterThanOrEqual">Greater Than or Equal</option>
+                            <option value="lessThanOrEqual">Less Than or Equal</option>
+                            <option value="isEmpty">Is Empty</option>
+                            <option value="isNotEmpty">Is Not Empty</option>
+                            <option value="exists">Field Exists</option>
+                            <option value="notExists">Field Not Exists</option>
+                          </select>
+
+                          <input
+                            type="text"
+                            value={condition.value || ''}
+                            onChange={(e) => {
+                              const conditions = [...(formData.parameters.conditions || [])];
+                              conditions[index] = { ...conditions[index], value: e.target.value };
+                              handleParameterChange('conditions', conditions);
+                            }}
+                            placeholder="Value to compare"
+                            disabled={['isEmpty', 'isNotEmpty', 'exists', 'notExists'].includes(condition.operator)}
+                          />
+                          
+                          <select
+                            value={condition.type || 'string'}
+                            onChange={(e) => {
+                              const conditions = [...(formData.parameters.conditions || [])];
+                              conditions[index] = { ...conditions[index], type: e.target.value };
+                              handleParameterChange('conditions', conditions);
+                            }}
+                          >
+                            <option value="string">String</option>
+                            <option value="number">Number</option>
+                            <option value="boolean">Boolean</option>
+                            <option value="date">Date</option>
+                          </select>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const conditions = formData.parameters.conditions?.filter((_: any, i: number) => i !== index) || [];
+                            handleParameterChange('conditions', conditions);
+                          }}
+                          className="delete-condition-btn"
+                          title="Delete Condition"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))}
+
+                    {(!formData.parameters.conditions || formData.parameters.conditions.length === 0) && (
+                      <p className="help-text">No conditions defined. Add a condition to filter data.</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* JSONPath Filter */}
+              {formData.parameters.mode === 'jsonPath' && (
+                <div className="form-group">
+                  <label>JSONPath Expression</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.jsonPath || ''}
+                    onChange={(e) => handleParameterChange('jsonPath', e.target.value)}
+                    placeholder="$.items[?(@.active == true)]"
+                  />
+                  <p className="help-text">JSONPath expression to filter data</p>
+                </div>
+              )}
+
+              {/* JavaScript Filter */}
+              {formData.parameters.mode === 'javascript' && (
+                <div className="form-group">
+                  <label>JavaScript Filter Function</label>
+                  <textarea
+                    value={formData.parameters.jsFilter || ''}
+                    onChange={(e) => handleParameterChange('jsFilter', e.target.value)}
+                    placeholder="// Return true to keep item, false to filter out\nreturn item.status === 'active' && item.score > 50;"
+                    rows={6}
+                  />
+                  <p className="help-text">JavaScript function body. Available variables: item, index, items</p>
+                </div>
+              )}
+
+              {/* Duplicate Filter */}
+              {formData.parameters.mode === 'duplicate' && (
+                <>
+                  <div className="form-group">
+                    <label>Duplicate Check Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.duplicateField || 'id'}
+                      onChange={(e) => handleParameterChange('duplicateField', e.target.value)}
+                      placeholder="id"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Keep</label>
+                    <select
+                      value={formData.parameters.keepDuplicate || 'first'}
+                      onChange={(e) => handleParameterChange('keepDuplicate', e.target.value)}
+                    >
+                      <option value="first">First Occurrence</option>
+                      <option value="last">Last Occurrence</option>
+                      <option value="none">Remove All Duplicates</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Limit Filter */}
+              {formData.parameters.mode === 'limit' && (
+                <>
+                  <div className="form-group">
+                    <label>Limit</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.limit || 10}
+                      onChange={(e) => handleParameterChange('limit', parseInt(e.target.value) || 10)}
+                      min="1"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Skip (Offset)</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.skip || 0}
+                      onChange={(e) => handleParameterChange('skip', parseInt(e.target.value) || 0)}
+                      min="0"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* General Options */}
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.caseSensitive || false}
+                    onChange={(e) => handleParameterChange('caseSensitive', e.target.checked)}
+                  />
+                  Case Sensitive Comparison
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.continueOnFail !== false}
+                    onChange={(e) => handleParameterChange('continueOnFail', e.target.checked)}
+                  />
+                  Continue on Failure
+                </label>
+                <p className="help-text">Continue processing other items if filter fails on one item</p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'split':
+        return (
+          <>
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaExpand /> Split Configuration
+              </h4>
+
+              <div className="form-group">
+                <label>Split Mode</label>
+                <select
+                  value={formData.parameters.mode || 'array'}
+                  onChange={(e) => handleParameterChange('mode', e.target.value)}
+                >
+                  <option value="array">Split Array - Split array into individual items</option>
+                  <option value="batch">Batch Split - Split into batches of specified size</option>
+                  <option value="field">Field Split - Split by field value</option>
+                  <option value="regex">Regex Split - Split text by regex pattern</option>
+                  <option value="delimiter">Delimiter Split - Split by delimiter</option>
+                  <option value="chunks">Chunk Split - Split into equal chunks</option>
+                  <option value="conditional">Conditional Split - Split based on conditions</option>
+                </select>
+                <p className="help-text">How to split the input data</p>
+              </div>
+
+              {/* Array Split Settings */}
+              {formData.parameters.mode === 'array' && (
+                <>
+                  <div className="form-group">
+                    <label>Array Path</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.arrayPath || 'items'}
+                      onChange={(e) => handleParameterChange('arrayPath', e.target.value)}
+                      placeholder="items"
+                    />
+                    <p className="help-text">Path to the array field to split (use dot notation for nested)</p>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.preserveParent || false}
+                        onChange={(e) => handleParameterChange('preserveParent', e.target.checked)}
+                      />
+                      Preserve Parent Object
+                    </label>
+                    <p className="help-text">Include parent object properties in each split item</p>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.addIndex || false}
+                        onChange={(e) => handleParameterChange('addIndex', e.target.checked)}
+                      />
+                      Add Index Field
+                    </label>
+                    <p className="help-text">Add index field to track original position</p>
+                  </div>
+                  {formData.parameters.addIndex && (
+                    <div className="form-group">
+                      <label>Index Field Name</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.indexFieldName || '_index'}
+                        onChange={(e) => handleParameterChange('indexFieldName', e.target.value)}
+                        placeholder="_index"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Batch Split Settings */}
+              {formData.parameters.mode === 'batch' && (
+                <>
+                  <div className="form-group">
+                    <label>Batch Size</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.batchSize || 10}
+                      onChange={(e) => handleParameterChange('batchSize', parseInt(e.target.value) || 10)}
+                      min="1"
+                    />
+                    <p className="help-text">Number of items per batch</p>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includePartial || true}
+                        onChange={(e) => handleParameterChange('includePartial', e.target.checked)}
+                      />
+                      Include Partial Batches
+                    </label>
+                    <p className="help-text">Include the last batch even if it's smaller than batch size</p>
+                  </div>
+                </>
+              )}
+
+              {/* Field Split Settings */}
+              {formData.parameters.mode === 'field' && (
+                <>
+                  <div className="form-group">
+                    <label>Split Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.splitField || 'category'}
+                      onChange={(e) => handleParameterChange('splitField', e.target.value)}
+                      placeholder="category"
+                    />
+                    <p className="help-text">Field to group items by</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Output Mode</label>
+                    <select
+                      value={formData.parameters.outputMode || 'separate'}
+                      onChange={(e) => handleParameterChange('outputMode', e.target.value)}
+                    >
+                      <option value="separate">Separate Items - Each unique value becomes separate output</option>
+                      <option value="grouped">Grouped Arrays - Group items by field value</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Regex Split Settings */}
+              {formData.parameters.mode === 'regex' && (
+                <>
+                  <div className="form-group">
+                    <label>Text Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.textField || 'text'}
+                      onChange={(e) => handleParameterChange('textField', e.target.value)}
+                      placeholder="text"
+                    />
+                    <p className="help-text">Field containing text to split</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Regex Pattern</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.regexPattern || '\\s+'}
+                      onChange={(e) => handleParameterChange('regexPattern', e.target.value)}
+                      placeholder="\\s+"
+                    />
+                    <p className="help-text">Regular expression pattern to split on</p>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.removeEmpty || true}
+                        onChange={(e) => handleParameterChange('removeEmpty', e.target.checked)}
+                      />
+                      Remove Empty Parts
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Delimiter Split Settings */}
+              {formData.parameters.mode === 'delimiter' && (
+                <>
+                  <div className="form-group">
+                    <label>Text Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.textField || 'text'}
+                      onChange={(e) => handleParameterChange('textField', e.target.value)}
+                      placeholder="text"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Delimiter</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.delimiter || ','}
+                      onChange={(e) => handleParameterChange('delimiter', e.target.value)}
+                      placeholder=","
+                    />
+                    <p className="help-text">Delimiter to split on (comma, semicolon, pipe, etc.)</p>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.trimWhitespace || true}
+                        onChange={(e) => handleParameterChange('trimWhitespace', e.target.checked)}
+                      />
+                      Trim Whitespace
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Chunk Split Settings */}
+              {formData.parameters.mode === 'chunks' && (
+                <div className="form-group">
+                  <label>Number of Chunks</label>
+                  <input
+                    type="number"
+                    value={formData.parameters.chunkCount || 3}
+                    onChange={(e) => handleParameterChange('chunkCount', parseInt(e.target.value) || 3)}
+                    min="1"
+                  />
+                  <p className="help-text">Number of equal chunks to split data into</p>
+                </div>
+              )}
+
+              {/* Conditional Split Settings */}
+              {formData.parameters.mode === 'conditional' && (
+                <div className="conditions-section">
+                  <div className="conditions-header">
+                    <label>Split Conditions</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const conditions = formData.parameters.splitConditions || [];
+                        handleParameterChange('splitConditions', [
+                          ...conditions,
+                          { field: '', operator: 'equals', value: '', outputName: '' }
+                        ]);
+                      }}
+                      className="btn-add-condition"
+                    >
+                      + Add Condition
+                    </button>
+                  </div>
+
+                  {(formData.parameters.splitConditions || []).map((condition: any, index: number) => (
+                    <div key={index} className="condition-row">
+                      <div className="condition-fields">
+                        <input
+                          type="text"
+                          value={condition.field || ''}
+                          onChange={(e) => {
+                            const conditions = [...(formData.parameters.splitConditions || [])];
+                            conditions[index] = { ...conditions[index], field: e.target.value };
+                            handleParameterChange('splitConditions', conditions);
+                          }}
+                          placeholder="Field path"
+                        />
+                        
+                        <select
+                          value={condition.operator || 'equals'}
+                          onChange={(e) => {
+                            const conditions = [...(formData.parameters.splitConditions || [])];
+                            conditions[index] = { ...conditions[index], operator: e.target.value };
+                            handleParameterChange('splitConditions', conditions);
+                          }}
+                        >
+                          <option value="equals">Equals</option>
+                          <option value="contains">Contains</option>
+                          <option value="greaterThan">Greater Than</option>
+                          <option value="lessThan">Less Than</option>
+                        </select>
+
+                        <input
+                          type="text"
+                          value={condition.value || ''}
+                          onChange={(e) => {
+                            const conditions = [...(formData.parameters.splitConditions || [])];
+                            conditions[index] = { ...conditions[index], value: e.target.value };
+                            handleParameterChange('splitConditions', conditions);
+                          }}
+                          placeholder="Value"
+                        />
+
+                        <input
+                          type="text"
+                          value={condition.outputName || ''}
+                          onChange={(e) => {
+                            const conditions = [...(formData.parameters.splitConditions || [])];
+                            conditions[index] = { ...conditions[index], outputName: e.target.value };
+                            handleParameterChange('splitConditions', conditions);
+                          }}
+                          placeholder="Output name"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const conditions = formData.parameters.splitConditions?.filter((_: any, i: number) => i !== index) || [];
+                          handleParameterChange('splitConditions', conditions);
+                        }}
+                        className="delete-condition-btn"
+                        title="Delete Condition"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* General Options */}
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.continueOnFail !== false}
+                    onChange={(e) => handleParameterChange('continueOnFail', e.target.checked)}
+                  />
+                  Continue on Failure
+                </label>
+                <p className="help-text">Continue processing if split fails on some items</p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'aggregate':
+        return (
+          <>
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaLayerGroup /> Aggregate Configuration
+              </h4>
+
+              <div className="form-group">
+                <label>Aggregate Mode</label>
+                <select
+                  value={formData.parameters.mode || 'group'}
+                  onChange={(e) => handleParameterChange('mode', e.target.value)}
+                >
+                  <option value="group">Group By - Group items by field value</option>
+                  <option value="sum">Sum - Calculate sum of numeric fields</option>
+                  <option value="count">Count - Count items or field occurrences</option>
+                  <option value="average">Average - Calculate average of numeric fields</option>
+                  <option value="minMax">Min/Max - Find minimum and maximum values</option>
+                  <option value="collect">Collect - Collect field values into arrays</option>
+                  <option value="merge">Merge Objects - Merge all objects into one</option>
+                  <option value="stats">Statistics - Calculate comprehensive statistics</option>
+                </select>
+                <p className="help-text">Type of aggregation to perform</p>
+              </div>
+
+              {/* Group By Settings */}
+              {formData.parameters.mode === 'group' && (
+                <>
+                  <div className="form-group">
+                    <label>Group By Fields</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.groupByFields || 'category'}
+                      onChange={(e) => handleParameterChange('groupByFields', e.target.value)}
+                      placeholder="category,status (comma-separated for multiple fields)"
+                    />
+                    <p className="help-text">Fields to group by (use dot notation for nested fields)</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Output Format</label>
+                    <select
+                      value={formData.parameters.outputFormat || 'grouped'}
+                      onChange={(e) => handleParameterChange('outputFormat', e.target.value)}
+                    >
+                      <option value="grouped">Grouped Object - {`{groupKey: [items]}`}</option>
+                      <option value="array">Array with Group Info - Items with group metadata</option>
+                      <option value="summary">Summary Only - Group keys and counts</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeGroupKey || true}
+                        onChange={(e) => handleParameterChange('includeGroupKey', e.target.checked)}
+                      />
+                      Include Group Key in Items
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Sum Settings */}
+              {formData.parameters.mode === 'sum' && (
+                <>
+                  <div className="form-group">
+                    <label>Sum Fields</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.sumFields || 'amount'}
+                      onChange={(e) => handleParameterChange('sumFields', e.target.value)}
+                      placeholder="amount,price,quantity (comma-separated)"
+                    />
+                    <p className="help-text">Numeric fields to sum</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Group By (Optional)</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.groupBy || ''}
+                      onChange={(e) => handleParameterChange('groupBy', e.target.value)}
+                      placeholder="category (leave empty for total sum)"
+                    />
+                    <p className="help-text">Group by field before summing</p>
+                  </div>
+                </>
+              )}
+
+              {/* Count Settings */}
+              {formData.parameters.mode === 'count' && (
+                <>
+                  <div className="form-group">
+                    <label>Count Type</label>
+                    <select
+                      value={formData.parameters.countType || 'total'}
+                      onChange={(e) => handleParameterChange('countType', e.target.value)}
+                    >
+                      <option value="total">Total Items</option>
+                      <option value="unique">Unique Values</option>
+                      <option value="field">Non-empty Field Values</option>
+                      <option value="grouped">Count by Group</option>
+                    </select>
+                  </div>
+                  {(formData.parameters.countType === 'unique' || formData.parameters.countType === 'field') && (
+                    <div className="form-group">
+                      <label>Count Field</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.countField || 'id'}
+                        onChange={(e) => handleParameterChange('countField', e.target.value)}
+                        placeholder="id"
+                      />
+                    </div>
+                  )}
+                  {formData.parameters.countType === 'grouped' && (
+                    <div className="form-group">
+                      <label>Group By Field</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.groupBy || 'category'}
+                        onChange={(e) => handleParameterChange('groupBy', e.target.value)}
+                        placeholder="category"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Average Settings */}
+              {formData.parameters.mode === 'average' && (
+                <>
+                  <div className="form-group">
+                    <label>Average Fields</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.avgFields || 'score'}
+                      onChange={(e) => handleParameterChange('avgFields', e.target.value)}
+                      placeholder="score,rating,value (comma-separated)"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Group By (Optional)</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.groupBy || ''}
+                      onChange={(e) => handleParameterChange('groupBy', e.target.value)}
+                      placeholder="category"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Decimal Places</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.decimalPlaces || 2}
+                      onChange={(e) => handleParameterChange('decimalPlaces', parseInt(e.target.value) || 2)}
+                      min="0"
+                      max="10"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Min/Max Settings */}
+              {formData.parameters.mode === 'minMax' && (
+                <>
+                  <div className="form-group">
+                    <label>Fields to Analyze</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.minMaxFields || 'price'}
+                      onChange={(e) => handleParameterChange('minMaxFields', e.target.value)}
+                      placeholder="price,score,date (comma-separated)"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Output Mode</label>
+                    <select
+                      value={formData.parameters.minMaxMode || 'both'}
+                      onChange={(e) => handleParameterChange('minMaxMode', e.target.value)}
+                    >
+                      <option value="both">Both Min and Max</option>
+                      <option value="min">Minimum Only</option>
+                      <option value="max">Maximum Only</option>
+                      <option value="items">Min/Max Items (full records)</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Group By (Optional)</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.groupBy || ''}
+                      onChange={(e) => handleParameterChange('groupBy', e.target.value)}
+                      placeholder="category"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Collect Settings */}
+              {formData.parameters.mode === 'collect' && (
+                <>
+                  <div className="form-group">
+                    <label>Fields to Collect</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.collectFields || 'name'}
+                      onChange={(e) => handleParameterChange('collectFields', e.target.value)}
+                      placeholder="name,email,tags (comma-separated)"
+                    />
+                    <p className="help-text">Fields to collect into arrays</p>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.removeDuplicates || false}
+                        onChange={(e) => handleParameterChange('removeDuplicates', e.target.checked)}
+                      />
+                      Remove Duplicates
+                    </label>
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.flattenArrays || false}
+                        onChange={(e) => handleParameterChange('flattenArrays', e.target.checked)}
+                      />
+                      Flatten Nested Arrays
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Merge Objects Settings */}
+              {formData.parameters.mode === 'merge' && (
+                <>
+                  <div className="form-group">
+                    <label>Merge Strategy</label>
+                    <select
+                      value={formData.parameters.mergeStrategy || 'shallow'}
+                      onChange={(e) => handleParameterChange('mergeStrategy', e.target.value)}
+                    >
+                      <option value="shallow">Shallow Merge - Overwrite conflicting properties</option>
+                      <option value="deep">Deep Merge - Merge nested objects</option>
+                      <option value="array">Array Merge - Combine arrays</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Conflict Resolution</label>
+                    <select
+                      value={formData.parameters.conflictResolution || 'last'}
+                      onChange={(e) => handleParameterChange('conflictResolution', e.target.value)}
+                    >
+                      <option value="last">Use Last Value</option>
+                      <option value="first">Use First Value</option>
+                      <option value="array">Combine into Array</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* Statistics Settings */}
+              {formData.parameters.mode === 'stats' && (
+                <>
+                  <div className="form-group">
+                    <label>Numeric Fields</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.statsFields || 'score'}
+                      onChange={(e) => handleParameterChange('statsFields', e.target.value)}
+                      placeholder="score,price,rating (comma-separated)"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Statistics to Calculate</label>
+                    <div className="checkbox-group">
+                      {['count', 'sum', 'average', 'min', 'max', 'median', 'mode', 'stddev'].map(stat => (
+                        <label key={stat} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={(formData.parameters.includeStats || ['count', 'sum', 'average', 'min', 'max']).includes(stat)}
+                            onChange={(e) => {
+                              const currentStats = formData.parameters.includeStats || ['count', 'sum', 'average', 'min', 'max'];
+                              const newStats = e.target.checked
+                                ? [...currentStats, stat]
+                                : currentStats.filter((s: string) => s !== stat);
+                              handleParameterChange('includeStats', newStats);
+                            }}
+                          />
+                          {stat.charAt(0).toUpperCase() + stat.slice(1)}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* General Options */}
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.ignoreNulls !== false}
+                    onChange={(e) => handleParameterChange('ignoreNulls', e.target.checked)}
+                  />
+                  Ignore Null Values
+                </label>
+                <p className="help-text">Skip null or undefined values in calculations</p>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.continueOnFail !== false}
+                    onChange={(e) => handleParameterChange('continueOnFail', e.target.checked)}
+                  />
+                  Continue on Failure
+                </label>
+                <p className="help-text">Continue processing if aggregation fails on some items</p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'aiml':
+      case 'ai':
+      case 'ml':
+        return (
+          <>
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaBrain /> AI/ML Configuration
+              </h4>
+
+              <div className="form-group">
+                <label>AI/ML Service</label>
+                <select
+                  value={formData.parameters.service || 'openai'}
+                  onChange={(e) => handleParameterChange('service', e.target.value)}
+                >
+                  <option value="openai">OpenAI (GPT, DALL-E, Whisper)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="google">Google AI (Gemini, PaLM)</option>
+                  <option value="azure">Azure AI Services</option>
+                  <option value="aws">AWS AI/ML Services</option>
+                  <option value="huggingface">Hugging Face</option>
+                  <option value="custom">Custom API</option>
+                  <option value="local">Local Model</option>
+                </select>
+                <p className="help-text">Choose the AI/ML service provider</p>
+              </div>
+
+              <div className="form-group">
+                <label>Task Type</label>
+                <select
+                  value={formData.parameters.taskType || 'text'}
+                  onChange={(e) => handleParameterChange('taskType', e.target.value)}
+                >
+                  <option value="text">🔤 Text Processing</option>
+                  <option value="image">🖼️ Image Processing</option>
+                  <option value="audio">🎵 Audio Processing</option>
+                  <option value="video">🎬 Video Processing</option>
+                  <option value="embedding">🧮 Embeddings</option>
+                  <option value="classification">📊 Classification</option>
+                  <option value="prediction">🔮 Prediction</option>
+                  <option value="generation">✨ Generation</option>
+                </select>
+                <p className="help-text">Type of AI/ML task to perform</p>
+              </div>
+
+              {/* Authentication */}
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaCloud /> Authentication
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Test AI service connection
+                      console.log('Testing AI service connection...');
+                    }}
+                    disabled={testingConnection}
+                    className="test-connection-btn"
+                    title="Test AI Service Connection"
+                  >
+                    {testingConnection ? (
+                      <FaSpinner className="spinning" />
+                    ) : (
+                      <FaCheck />
+                    )}
+                    {testingConnection ? 'Testing...' : 'Test Connection'}
+                  </button>
+                </h4>
+                
+                <div className="form-group">
+                  <label>API Key</label>
+                  <input
+                    type="password"
+                    value={formData.parameters.apiKey || ''}
+                    onChange={(e) => handleParameterChange('apiKey', e.target.value)}
+                    placeholder="sk-..."
+                  />
+                  <p className="help-text">API key for the selected service</p>
+                </div>
+
+                {formData.parameters.service === 'azure' && (
+                  <>
+                    <div className="form-group">
+                      <label>Endpoint URL</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.endpoint || ''}
+                        onChange={(e) => handleParameterChange('endpoint', e.target.value)}
+                        placeholder="https://your-resource.openai.azure.com/"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>API Version</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.apiVersion || '2024-02-01'}
+                        onChange={(e) => handleParameterChange('apiVersion', e.target.value)}
+                        placeholder="2024-02-01"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {formData.parameters.service === 'custom' && (
+                  <div className="form-group">
+                    <label>Custom API Endpoint</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.customEndpoint || ''}
+                      onChange={(e) => handleParameterChange('customEndpoint', e.target.value)}
+                      placeholder="https://api.custom-ai-service.com/v1/chat"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Text Processing */}
+              {formData.parameters.taskType === 'text' && (
+                <div className="form-section">
+                  <h4 className="section-title">
+                    <FaLanguage /> Text Processing
+                  </h4>
+
+                  <div className="form-group">
+                    <label>Operation</label>
+                    <select
+                      value={formData.parameters.textOperation || 'chat'}
+                      onChange={(e) => handleParameterChange('textOperation', e.target.value)}
+                    >
+                      <option value="chat">Chat/Conversation</option>
+                      <option value="completion">Text Completion</option>
+                      <option value="summarize">Summarization</option>
+                      <option value="translate">Translation</option>
+                      <option value="sentiment">Sentiment Analysis</option>
+                      <option value="extract">Information Extraction</option>
+                      <option value="classify">Text Classification</option>
+                      <option value="question">Question Answering</option>
+                      <option value="rewrite">Text Rewriting</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Model</label>
+                    <select
+                      value={formData.parameters.model || 'gpt-4'}
+                      onChange={(e) => handleParameterChange('model', e.target.value)}
+                    >
+                      {formData.parameters.service === 'openai' && (
+                        <>
+                          <option value="gpt-4">GPT-4</option>
+                          <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                          <option value="text-davinci-003">GPT-3 Davinci</option>
+                        </>
+                      )}
+                      {formData.parameters.service === 'anthropic' && (
+                        <>
+                          <option value="claude-3-opus">Claude 3 Opus</option>
+                          <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                          <option value="claude-3-haiku">Claude 3 Haiku</option>
+                          <option value="claude-2">Claude 2</option>
+                        </>
+                      )}
+                      {formData.parameters.service === 'google' && (
+                        <>
+                          <option value="gemini-pro">Gemini Pro</option>
+                          <option value="gemini-pro-vision">Gemini Pro Vision</option>
+                          <option value="palm-2">PaLM 2</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Input Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.inputField || 'text'}
+                      onChange={(e) => handleParameterChange('inputField', e.target.value)}
+                      placeholder="text"
+                    />
+                    <p className="help-text">Field containing the input text to process</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>System Prompt</label>
+                    <textarea
+                      value={formData.parameters.systemPrompt || ''}
+                      onChange={(e) => handleParameterChange('systemPrompt', e.target.value)}
+                      placeholder="You are a helpful AI assistant..."
+                      rows={3}
+                    />
+                    <p className="help-text">System instructions for the AI model</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>User Prompt Template</label>
+                    <textarea
+                      value={formData.parameters.promptTemplate || ''}
+                      onChange={(e) => handleParameterChange('promptTemplate', e.target.value)}
+                      placeholder="Process this text: {{text}}"
+                      rows={4}
+                    />
+                    <p className="help-text">Template for user prompts (use {{fieldName}} for variables)</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Max Tokens</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.maxTokens || 1000}
+                      onChange={(e) => handleParameterChange('maxTokens', parseInt(e.target.value) || 1000)}
+                      min="1"
+                      max="32000"
+                    />
+                    <p className="help-text">Maximum number of tokens to generate</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Temperature</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={formData.parameters.temperature || 0.7}
+                      onChange={(e) => handleParameterChange('temperature', parseFloat(e.target.value))}
+                    />
+                    <span>{formData.parameters.temperature || 0.7}</span>
+                    <p className="help-text">Controls randomness (0 = deterministic, 2 = very random)</p>
+                  </div>
+
+                  {formData.parameters.textOperation === 'translate' && (
+                    <>
+                      <div className="form-group">
+                        <label>Source Language</label>
+                        <select
+                          value={formData.parameters.sourceLanguage || 'auto'}
+                          onChange={(e) => handleParameterChange('sourceLanguage', e.target.value)}
+                        >
+                          <option value="auto">Auto Detect</option>
+                          <option value="en">English</option>
+                          <option value="es">Spanish</option>
+                          <option value="fr">French</option>
+                          <option value="de">German</option>
+                          <option value="zh">Chinese</option>
+                          <option value="ja">Japanese</option>
+                          <option value="ko">Korean</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Target Language</label>
+                        <select
+                          value={formData.parameters.targetLanguage || 'en'}
+                          onChange={(e) => handleParameterChange('targetLanguage', e.target.value)}
+                        >
+                          <option value="en">English</option>
+                          <option value="es">Spanish</option>
+                          <option value="fr">French</option>
+                          <option value="de">German</option>
+                          <option value="zh">Chinese</option>
+                          <option value="ja">Japanese</option>
+                          <option value="ko">Korean</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Image Processing */}
+              {formData.parameters.taskType === 'image' && (
+                <div className="form-section">
+                  <h4 className="section-title">
+                    <FaEye /> Image Processing
+                  </h4>
+
+                  <div className="form-group">
+                    <label>Operation</label>
+                    <select
+                      value={formData.parameters.imageOperation || 'analyze'}
+                      onChange={(e) => handleParameterChange('imageOperation', e.target.value)}
+                    >
+                      <option value="analyze">Image Analysis</option>
+                      <option value="generate">Image Generation</option>
+                      <option value="edit">Image Editing</option>
+                      <option value="enhance">Image Enhancement</option>
+                      <option value="ocr">Text Recognition (OCR)</option>
+                      <option value="classify">Image Classification</option>
+                      <option value="detect">Object Detection</option>
+                      <option value="segment">Image Segmentation</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Image Input</label>
+                    <select
+                      value={formData.parameters.imageInput || 'url'}
+                      onChange={(e) => handleParameterChange('imageInput', e.target.value)}
+                    >
+                      <option value="url">Image URL</option>
+                      <option value="base64">Base64 Data</option>
+                      <option value="file">File Upload</option>
+                      <option value="field">From Data Field</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Image Field/URL</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.imageField || 'imageUrl'}
+                      onChange={(e) => handleParameterChange('imageField', e.target.value)}
+                      placeholder="imageUrl or field name"
+                    />
+                  </div>
+
+                  {formData.parameters.imageOperation === 'generate' && (
+                    <>
+                      <div className="form-group">
+                        <label>Generation Prompt</label>
+                        <textarea
+                          value={formData.parameters.generatePrompt || ''}
+                          onChange={(e) => handleParameterChange('generatePrompt', e.target.value)}
+                          placeholder="A beautiful landscape with mountains and trees..."
+                          rows={3}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Image Size</label>
+                        <select
+                          value={formData.parameters.imageSize || '1024x1024'}
+                          onChange={(e) => handleParameterChange('imageSize', e.target.value)}
+                        >
+                          <option value="256x256">256x256</option>
+                          <option value="512x512">512x512</option>
+                          <option value="1024x1024">1024x1024</option>
+                          <option value="1792x1024">1792x1024 (Landscape)</option>
+                          <option value="1024x1792">1024x1792 (Portrait)</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Number of Images</label>
+                        <input
+                          type="number"
+                          value={formData.parameters.numImages || 1}
+                          onChange={(e) => handleParameterChange('numImages', parseInt(e.target.value) || 1)}
+                          min="1"
+                          max="10"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {formData.parameters.imageOperation === 'analyze' && (
+                    <div className="form-group">
+                      <label>Analysis Type</label>
+                      <div className="checkbox-group">
+                        {['objects', 'faces', 'text', 'colors', 'emotions', 'landmarks', 'brands', 'nsfw'].map(type => (
+                          <label key={type} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={(formData.parameters.analysisTypes || ['objects']).includes(type)}
+                              onChange={(e) => {
+                                const current = formData.parameters.analysisTypes || ['objects'];
+                                const updated = e.target.checked
+                                  ? [...current, type]
+                                  : current.filter((t: string) => t !== type);
+                                handleParameterChange('analysisTypes', updated);
+                              }}
+                            />
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Audio Processing */}
+              {formData.parameters.taskType === 'audio' && (
+                <div className="form-section">
+                  <h4 className="section-title">
+                    <FaMicrophone /> Audio Processing
+                  </h4>
+
+                  <div className="form-group">
+                    <label>Operation</label>
+                    <select
+                      value={formData.parameters.audioOperation || 'transcribe'}
+                      onChange={(e) => handleParameterChange('audioOperation', e.target.value)}
+                    >
+                      <option value="transcribe">Speech to Text</option>
+                      <option value="translate">Audio Translation</option>
+                      <option value="generate">Text to Speech</option>
+                      <option value="classify">Audio Classification</option>
+                      <option value="separate">Audio Separation</option>
+                      <option value="enhance">Audio Enhancement</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Audio Input</label>
+                    <select
+                      value={formData.parameters.audioInput || 'url'}
+                      onChange={(e) => handleParameterChange('audioInput', e.target.value)}
+                    >
+                      <option value="url">Audio URL</option>
+                      <option value="file">File Upload</option>
+                      <option value="field">From Data Field</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Audio Field/URL</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.audioField || 'audioUrl'}
+                      onChange={(e) => handleParameterChange('audioField', e.target.value)}
+                      placeholder="audioUrl or field name"
+                    />
+                  </div>
+
+                  {formData.parameters.audioOperation === 'transcribe' && (
+                    <>
+                      <div className="form-group">
+                        <label>Language</label>
+                        <select
+                          value={formData.parameters.audioLanguage || 'auto'}
+                          onChange={(e) => handleParameterChange('audioLanguage', e.target.value)}
+                        >
+                          <option value="auto">Auto Detect</option>
+                          <option value="en">English</option>
+                          <option value="es">Spanish</option>
+                          <option value="fr">French</option>
+                          <option value="de">German</option>
+                          <option value="zh">Chinese</option>
+                          <option value="ja">Japanese</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={formData.parameters.includeTimestamps || false}
+                            onChange={(e) => handleParameterChange('includeTimestamps', e.target.checked)}
+                          />
+                          Include Timestamps
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  {formData.parameters.audioOperation === 'generate' && (
+                    <>
+                      <div className="form-group">
+                        <label>Text Field</label>
+                        <input
+                          type="text"
+                          value={formData.parameters.textField || 'text'}
+                          onChange={(e) => handleParameterChange('textField', e.target.value)}
+                          placeholder="text"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Voice</label>
+                        <select
+                          value={formData.parameters.voice || 'alloy'}
+                          onChange={(e) => handleParameterChange('voice', e.target.value)}
+                        >
+                          <option value="alloy">Alloy</option>
+                          <option value="echo">Echo</option>
+                          <option value="fable">Fable</option>
+                          <option value="onyx">Onyx</option>
+                          <option value="nova">Nova</option>
+                          <option value="shimmer">Shimmer</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Embeddings */}
+              {formData.parameters.taskType === 'embedding' && (
+                <div className="form-section">
+                  <h4 className="section-title">
+                    <FaChartLine /> Embeddings
+                  </h4>
+
+                  <div className="form-group">
+                    <label>Embedding Model</label>
+                    <select
+                      value={formData.parameters.embeddingModel || 'text-embedding-ada-002'}
+                      onChange={(e) => handleParameterChange('embeddingModel', e.target.value)}
+                    >
+                      <option value="text-embedding-ada-002">OpenAI Ada 002</option>
+                      <option value="text-embedding-3-small">OpenAI v3 Small</option>
+                      <option value="text-embedding-3-large">OpenAI v3 Large</option>
+                      <option value="sentence-transformers">Sentence Transformers</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Input Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.embeddingInput || 'text'}
+                      onChange={(e) => handleParameterChange('embeddingInput', e.target.value)}
+                      placeholder="text"
+                    />
+                    <p className="help-text">Field containing text to embed</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Operation</label>
+                    <select
+                      value={formData.parameters.embeddingOperation || 'generate'}
+                      onChange={(e) => handleParameterChange('embeddingOperation', e.target.value)}
+                    >
+                      <option value="generate">Generate Embeddings</option>
+                      <option value="similarity">Calculate Similarity</option>
+                      <option value="search">Semantic Search</option>
+                      <option value="cluster">Clustering</option>
+                    </select>
+                  </div>
+
+                  {formData.parameters.embeddingOperation === 'similarity' && (
+                    <div className="form-group">
+                      <label>Compare With</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.compareWith || ''}
+                        onChange={(e) => handleParameterChange('compareWith', e.target.value)}
+                        placeholder="Reference text or embedding"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Output Configuration */}
+              <div className="form-section">
+                <h4 className="section-title">
+                  Output Configuration
+                </h4>
+
+                <div className="form-group">
+                  <label>Output Field</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.outputField || 'aiResult'}
+                    onChange={(e) => handleParameterChange('outputField', e.target.value)}
+                    placeholder="aiResult"
+                  />
+                  <p className="help-text">Field to store the AI/ML result</p>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.parameters.includeMetadata || true}
+                      onChange={(e) => handleParameterChange('includeMetadata', e.target.checked)}
+                    />
+                    Include Metadata
+                  </label>
+                  <p className="help-text">Include model info, tokens used, confidence scores, etc.</p>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.parameters.streamResponse || false}
+                      onChange={(e) => handleParameterChange('streamResponse', e.target.checked)}
+                    />
+                    Stream Response
+                  </label>
+                  <p className="help-text">Stream the response for real-time processing</p>
+                </div>
+              </div>
+
+              {/* Error Handling */}
+              <div className="form-section">
+                <h4 className="section-title">
+                  Error Handling & Retry
+                </h4>
+
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.parameters.continueOnError !== false}
+                      onChange={(e) => handleParameterChange('continueOnError', e.target.checked)}
+                    />
+                    Continue on Error
+                  </label>
+                </div>
+
+                <div className="form-group">
+                  <label>Retry Attempts</label>
+                  <input
+                    type="number"
+                    value={formData.parameters.retryAttempts || 3}
+                    onChange={(e) => handleParameterChange('retryAttempts', parseInt(e.target.value) || 3)}
+                    min="0"
+                    max="10"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Timeout (seconds)</label>
+                  <input
+                    type="number"
+                    value={formData.parameters.timeout || 60}
+                    onChange={(e) => handleParameterChange('timeout', parseInt(e.target.value) || 60)}
+                    min="1"
+                    max="300"
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'notification':
+        return (
+          <>
+            {/* Notification Channel Configuration */}
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaBell /> Notification Channel
+              </h4>
+              
+              <div className="form-group">
+                <label>
+                  {formData.parameters.channelType === 'email' && <FaEnvelope style={{marginRight: '8px'}} />}
+                  {formData.parameters.channelType === 'sms' && <FaMobile style={{marginRight: '8px'}} />}
+                  {formData.parameters.channelType === 'slack' && <FaSlack style={{marginRight: '8px'}} />}
+                  {formData.parameters.channelType === 'discord' && <FaDiscord style={{marginRight: '8px'}} />}
+                  {formData.parameters.channelType === 'teams' && <FaMicrosoft style={{marginRight: '8px'}} />}
+                  {formData.parameters.channelType === 'push' && <FaMobile style={{marginRight: '8px'}} />}
+                  {formData.parameters.channelType === 'webhook' && <FaGlobe style={{marginRight: '8px'}} />}
+                  Channel Type
+                </label>
+                <select
+                  value={formData.parameters.channelType || 'email'}
+                  onChange={(e) => handleParameterChange('channelType', e.target.value)}
+                >
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                  <option value="slack">Slack</option>
+                  <option value="discord">Discord</option>
+                  <option value="teams">Microsoft Teams</option>
+                  <option value="push">Push Notification</option>
+                  <option value="webhook">Webhook</option>
+                </select>
+              </div>
+
+              {formData.parameters.channelType === 'email' && (
+                <>
+                  <div className="form-group">
+                    <label>Email Recipients</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.recipients || ''}
+                      onChange={(e) => handleParameterChange('recipients', e.target.value)}
+                      placeholder="recipient@example.com, user2@example.com"
+                    />
+                    <small className="help-text">Comma-separated email addresses</small>
+                  </div>
+                  <div className="form-group">
+                    <label>Subject</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.subject || ''}
+                      onChange={(e) => handleParameterChange('subject', e.target.value)}
+                      placeholder="Notification Subject"
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.parameters.channelType === 'sms' && (
+                <div className="form-group">
+                  <label>Phone Numbers</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.recipients || ''}
+                    onChange={(e) => handleParameterChange('recipients', e.target.value)}
+                    placeholder="+1234567890, +0987654321"
+                  />
+                  <small className="help-text">Comma-separated phone numbers with country codes</small>
+                </div>
+              )}
+
+              {formData.parameters.channelType === 'slack' && (
+                <>
+                  <div className="form-group">
+                    <label>Slack Configuration</label>
+                    <select
+                      value={formData.parameters.slackMethod || 'webhook'}
+                      onChange={(e) => handleParameterChange('slackMethod', e.target.value)}
+                    >
+                      <option value="webhook">Webhook URL</option>
+                      <option value="bot">Bot Token</option>
+                    </select>
+                  </div>
+                  
+                  {formData.parameters.slackMethod === 'webhook' ? (
+                    <div className="form-group">
+                      <label>Slack Webhook URL</label>
+                      <input
+                        type="text"
+                        value={formData.parameters.slackWebhook || ''}
+                        onChange={(e) => handleParameterChange('slackWebhook', e.target.value)}
+                        placeholder="https://hooks.slack.com/services/..."
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="form-group">
+                        <label>Bot Token</label>
+                        <input
+                          type="password"
+                          value={formData.parameters.slackToken || ''}
+                          onChange={(e) => handleParameterChange('slackToken', e.target.value)}
+                          placeholder="xoxb-your-bot-token"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Channel</label>
+                        <input
+                          type="text"
+                          value={formData.parameters.slackChannel || ''}
+                          onChange={(e) => handleParameterChange('slackChannel', e.target.value)}
+                          placeholder="#general or @username"
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {formData.parameters.channelType === 'discord' && (
+                <div className="form-group">
+                  <label>Discord Webhook URL</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.discordWebhook || ''}
+                    onChange={(e) => handleParameterChange('discordWebhook', e.target.value)}
+                    placeholder="https://discord.com/api/webhooks/..."
+                  />
+                </div>
+              )}
+
+              {formData.parameters.channelType === 'teams' && (
+                <div className="form-group">
+                  <label>Teams Webhook URL</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.teamsWebhook || ''}
+                    onChange={(e) => handleParameterChange('teamsWebhook', e.target.value)}
+                    placeholder="https://outlook.office.com/webhook/..."
+                  />
+                </div>
+              )}
+
+              {formData.parameters.channelType === 'push' && (
+                <>
+                  <div className="form-group">
+                    <label>Push Service</label>
+                    <select
+                      value={formData.parameters.pushService || 'firebase'}
+                      onChange={(e) => handleParameterChange('pushService', e.target.value)}
+                    >
+                      <option value="firebase">Firebase FCM</option>
+                      <option value="apns">Apple APNS</option>
+                      <option value="onesignal">OneSignal</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Device Tokens</label>
+                    <textarea
+                      value={formData.parameters.deviceTokens || ''}
+                      onChange={(e) => handleParameterChange('deviceTokens', e.target.value)}
+                      placeholder="device_token_1&#10;device_token_2&#10;..."
+                      rows={3}
+                    />
+                    <small className="help-text">One device token per line</small>
+                  </div>
+                </>
+              )}
+
+              {formData.parameters.channelType === 'webhook' && (
+                <>
+                  <div className="form-group">
+                    <label>Webhook URL</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.webhookUrl || ''}
+                      onChange={(e) => handleParameterChange('webhookUrl', e.target.value)}
+                      placeholder="https://your-api.com/webhook"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>HTTP Method</label>
+                    <select
+                      value={formData.parameters.webhookMethod || 'POST'}
+                      onChange={(e) => handleParameterChange('webhookMethod', e.target.value)}
+                    >
+                      <option value="POST">POST</option>
+                      <option value="PUT">PUT</option>
+                      <option value="PATCH">PATCH</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Custom Headers (JSON)</label>
+                    <textarea
+                      value={formData.parameters.webhookHeaders || '{}'}
+                      onChange={(e) => handleParameterChange('webhookHeaders', e.target.value)}
+                      placeholder='{"Authorization": "Bearer token", "Content-Type": "application/json"}'
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Message Configuration */}
+            <div className="form-section">
+              <h4 className="section-title">Message Configuration</h4>
+              
+              <div className="form-group">
+                <label>Message</label>
+                <textarea
+                  value={formData.parameters.message || ''}
+                  onChange={(e) => handleParameterChange('message', e.target.value)}
+                  placeholder="Your notification message. Use {{variableName}} for dynamic content."
+                  rows={4}
+                />
+                <small className="help-text">Supports template variables like {"{{"} fieldName {"}}"}  </small>
+              </div>
+
+              <div className="form-group">
+                <label>Message Template</label>
+                <select
+                  value={formData.parameters.template || 'custom'}
+                  onChange={(e) => handleParameterChange('template', e.target.value)}
+                >
+                  <option value="custom">Custom Message</option>
+                  <option value="alert">Alert Template</option>
+                  <option value="info">Information Template</option>
+                  <option value="success">Success Template</option>
+                  <option value="warning">Warning Template</option>
+                  <option value="error">Error Template</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Priority</label>
+                <select
+                  value={formData.parameters.priority || 'normal'}
+                  onChange={(e) => handleParameterChange('priority', e.target.value)}
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Advanced Options */}
+            <div className="form-section">
+              <h4 className="section-title">Advanced Options</h4>
+              
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.retryOnFailure || false}
+                    onChange={(e) => handleParameterChange('retryOnFailure', e.target.checked)}
+                  />
+                  Retry on Failure
+                </label>
+              </div>
+
+              {formData.parameters.retryOnFailure && (
+                <div className="form-group">
+                  <label>Max Retries</label>
+                  <input
+                    type="number"
+                    value={formData.parameters.maxRetries || 3}
+                    onChange={(e) => handleParameterChange('maxRetries', parseInt(e.target.value) || 3)}
+                    min="1"
+                    max="10"
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>Schedule For Later</label>
+                <input
+                  type="datetime-local"
+                  value={formData.parameters.scheduled || ''}
+                  onChange={(e) => handleParameterChange('scheduled', e.target.value)}
+                />
+                <small className="help-text">Leave empty for immediate delivery</small>
+              </div>
+
+              <div className="form-group">
+                <label>Send Condition (JavaScript)</label>
+                <textarea
+                  value={formData.parameters.condition || ''}
+                  onChange={(e) => handleParameterChange('condition', e.target.value)}
+                  placeholder="e.g., data.status === 'error' || data.priority > 5"
+                  rows={2}
+                />
+                <small className="help-text">Optional: JavaScript expression that must be true to send notification</small>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.includeAttachments || false}
+                    onChange={(e) => handleParameterChange('includeAttachments', e.target.checked)}
+                  />
+                  Include Attachments (Email only)
+                </label>
+              </div>
+
+              {formData.parameters.includeAttachments && formData.parameters.channelType === 'email' && (
+                <div className="form-group">
+                  <label>Attachment Fields</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.attachmentFields || ''}
+                    onChange={(e) => handleParameterChange('attachmentFields', e.target.value)}
+                    placeholder="file1,file2,reportData"
+                  />
+                  <small className="help-text">Comma-separated field names containing file paths or data</small>
+                </div>
+              )}
+            </div>
+          </>
+        );
+
+      case 'analytics':
+        return (
+          <>
+            {/* Analytics Operation Configuration */}
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaChartLine /> Analytics Operation
+              </h4>
+              
+              <div className="form-group">
+                <label>
+                  {formData.parameters.analysisType === 'descriptive' && <FaTable style={{marginRight: '8px'}} />}
+                  {formData.parameters.analysisType === 'statistical' && <FaCalculator style={{marginRight: '8px'}} />}
+                  {formData.parameters.analysisType === 'visualization' && <FaChartBar style={{marginRight: '8px'}} />}
+                  {formData.parameters.analysisType === 'aggregation' && <FaLayerGroup style={{marginRight: '8px'}} />}
+                  {formData.parameters.analysisType === 'filtering' && <FaFilter style={{marginRight: '8px'}} />}
+                  {formData.parameters.analysisType === 'correlation' && <FaExchangeAlt style={{marginRight: '8px'}} />}
+                  Analysis Type
+                </label>
+                <select
+                  value={formData.parameters.analysisType || 'descriptive'}
+                  onChange={(e) => handleParameterChange('analysisType', e.target.value)}
+                >
+                  <option value="descriptive">Descriptive Statistics</option>
+                  <option value="statistical">Statistical Analysis</option>
+                  <option value="visualization">Data Visualization</option>
+                  <option value="aggregation">Data Aggregation</option>
+                  <option value="filtering">Data Filtering</option>
+                  <option value="correlation">Correlation Analysis</option>
+                  <option value="forecasting">Time Series Forecasting</option>
+                  <option value="clustering">Clustering Analysis</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Data Source Field</label>
+                <input
+                  type="text"
+                  value={formData.parameters.dataField || ''}
+                  onChange={(e) => handleParameterChange('dataField', e.target.value)}
+                  placeholder="data"
+                />
+                <small className="help-text">Field name containing the data to analyze</small>
+              </div>
+            </div>
+
+            {/* Descriptive Statistics Configuration */}
+            {formData.parameters.analysisType === 'descriptive' && (
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaTable /> Descriptive Statistics
+                </h4>
+                
+                <div className="form-group">
+                  <label>Statistics to Calculate</label>
+                  <div className="checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeCount || true}
+                        onChange={(e) => handleParameterChange('includeCount', e.target.checked)}
+                      />
+                      Count
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeMean || true}
+                        onChange={(e) => handleParameterChange('includeMean', e.target.checked)}
+                      />
+                      Mean
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeMedian || true}
+                        onChange={(e) => handleParameterChange('includeMedian', e.target.checked)}
+                      />
+                      Median
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeMode || false}
+                        onChange={(e) => handleParameterChange('includeMode', e.target.checked)}
+                      />
+                      Mode
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeStdDev || true}
+                        onChange={(e) => handleParameterChange('includeStdDev', e.target.checked)}
+                      />
+                      Standard Deviation
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeVariance || false}
+                        onChange={(e) => handleParameterChange('includeVariance', e.target.checked)}
+                      />
+                      Variance
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includeRange || true}
+                        onChange={(e) => handleParameterChange('includeRange', e.target.checked)}
+                      />
+                      Min/Max/Range
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.includePercentiles || false}
+                        onChange={(e) => handleParameterChange('includePercentiles', e.target.checked)}
+                      />
+                      Percentiles (25th, 75th)
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Group By Field (Optional)</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.groupByField || ''}
+                    onChange={(e) => handleParameterChange('groupByField', e.target.value)}
+                    placeholder="category"
+                  />
+                  <small className="help-text">Calculate statistics grouped by this field</small>
+                </div>
+              </div>
+            )}
+
+            {/* Statistical Analysis Configuration */}
+            {formData.parameters.analysisType === 'statistical' && (
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaCalculator /> Statistical Analysis
+                </h4>
+                
+                <div className="form-group">
+                  <label>Statistical Test</label>
+                  <select
+                    value={formData.parameters.statisticalTest || 'ttest'}
+                    onChange={(e) => handleParameterChange('statisticalTest', e.target.value)}
+                  >
+                    <option value="ttest">T-Test</option>
+                    <option value="anova">ANOVA</option>
+                    <option value="chisquare">Chi-Square Test</option>
+                    <option value="regression">Linear Regression</option>
+                    <option value="normality">Normality Test</option>
+                    <option value="correlation">Correlation Test</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Target Field</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.targetField || ''}
+                    onChange={(e) => handleParameterChange('targetField', e.target.value)}
+                    placeholder="value"
+                  />
+                  <small className="help-text">Primary field to analyze</small>
+                </div>
+
+                {['ttest', 'regression', 'correlation'].includes(formData.parameters.statisticalTest) && (
+                  <div className="form-group">
+                    <label>Compare Field</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.compareField || ''}
+                      onChange={(e) => handleParameterChange('compareField', e.target.value)}
+                      placeholder="comparison_value"
+                    />
+                    <small className="help-text">Field to compare against</small>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>Confidence Level</label>
+                  <select
+                    value={formData.parameters.confidenceLevel || '0.95'}
+                    onChange={(e) => handleParameterChange('confidenceLevel', e.target.value)}
+                  >
+                    <option value="0.90">90%</option>
+                    <option value="0.95">95%</option>
+                    <option value="0.99">99%</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Data Visualization Configuration */}
+            {formData.parameters.analysisType === 'visualization' && (
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaChartBar /> Data Visualization
+                </h4>
+                
+                <div className="form-group">
+                  <label>Chart Type</label>
+                  <select
+                    value={formData.parameters.chartType || 'bar'}
+                    onChange={(e) => handleParameterChange('chartType', e.target.value)}
+                  >
+                    <option value="bar">Bar Chart</option>
+                    <option value="line">Line Chart</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="scatter">Scatter Plot</option>
+                    <option value="histogram">Histogram</option>
+                    <option value="box">Box Plot</option>
+                    <option value="heatmap">Heatmap</option>
+                    <option value="area">Area Chart</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>X-Axis Field</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.xAxisField || ''}
+                    onChange={(e) => handleParameterChange('xAxisField', e.target.value)}
+                    placeholder="category"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Y-Axis Field</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.yAxisField || ''}
+                    onChange={(e) => handleParameterChange('yAxisField', e.target.value)}
+                    placeholder="value"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Chart Title</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.chartTitle || ''}
+                    onChange={(e) => handleParameterChange('chartTitle', e.target.value)}
+                    placeholder="Data Analysis Chart"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Output Format</label>
+                  <select
+                    value={formData.parameters.outputFormat || 'base64'}
+                    onChange={(e) => handleParameterChange('outputFormat', e.target.value)}
+                  >
+                    <option value="base64">Base64 Image</option>
+                    <option value="file">Save to File</option>
+                    <option value="url">Generate URL</option>
+                    <option value="svg">SVG String</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Chart Dimensions</label>
+                  <div style={{display: 'flex', gap: '10px'}}>
+                    <input
+                      type="number"
+                      value={formData.parameters.chartWidth || 800}
+                      onChange={(e) => handleParameterChange('chartWidth', parseInt(e.target.value) || 800)}
+                      placeholder="800"
+                      style={{width: '50%'}}
+                    />
+                    <span>×</span>
+                    <input
+                      type="number"
+                      value={formData.parameters.chartHeight || 600}
+                      onChange={(e) => handleParameterChange('chartHeight', parseInt(e.target.value) || 600)}
+                      placeholder="600"
+                      style={{width: '50%'}}
+                    />
+                  </div>
+                  <small className="help-text">Width × Height in pixels</small>
+                </div>
+              </div>
+            )}
+
+            {/* Data Aggregation Configuration */}
+            {formData.parameters.analysisType === 'aggregation' && (
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaLayerGroup /> Data Aggregation
+                </h4>
+                
+                <div className="form-group">
+                  <label>Aggregation Functions</label>
+                  <div className="checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.aggSum || true}
+                        onChange={(e) => handleParameterChange('aggSum', e.target.checked)}
+                      />
+                      Sum
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.aggAverage || true}
+                        onChange={(e) => handleParameterChange('aggAverage', e.target.checked)}
+                      />
+                      Average
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.aggCount || true}
+                        onChange={(e) => handleParameterChange('aggCount', e.target.checked)}
+                      />
+                      Count
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.aggMin || false}
+                        onChange={(e) => handleParameterChange('aggMin', e.target.checked)}
+                      />
+                      Minimum
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={formData.parameters.aggMax || false}
+                        onChange={(e) => handleParameterChange('aggMax', e.target.checked)}
+                      />
+                      Maximum
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Value Field</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.valueField || ''}
+                    onChange={(e) => handleParameterChange('valueField', e.target.value)}
+                    placeholder="amount"
+                  />
+                  <small className="help-text">Numeric field to aggregate</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Group By Fields</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.groupByFields || ''}
+                    onChange={(e) => handleParameterChange('groupByFields', e.target.value)}
+                    placeholder="category,region"
+                  />
+                  <small className="help-text">Comma-separated fields to group by</small>
+                </div>
+              </div>
+            )}
+
+            {/* Data Filtering Configuration */}
+            {formData.parameters.analysisType === 'filtering' && (
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaFilter /> Data Filtering
+                </h4>
+                
+                <div className="form-group">
+                  <label>Filter Conditions</label>
+                  <textarea
+                    value={formData.parameters.filterConditions || ''}
+                    onChange={(e) => handleParameterChange('filterConditions', e.target.value)}
+                    placeholder="value > 100 AND category = 'active'"
+                    rows={3}
+                  />
+                  <small className="help-text">SQL-like filter conditions</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Date Range Filtering</label>
+                  <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                    <input
+                      type="date"
+                      value={formData.parameters.startDate || ''}
+                      onChange={(e) => handleParameterChange('startDate', e.target.value)}
+                      style={{width: '45%'}}
+                    />
+                    <span>to</span>
+                    <input
+                      type="date"
+                      value={formData.parameters.endDate || ''}
+                      onChange={(e) => handleParameterChange('endDate', e.target.value)}
+                      style={{width: '45%'}}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Date Field</label>
+                  <input
+                    type="text"
+                    value={formData.parameters.dateField || ''}
+                    onChange={(e) => handleParameterChange('dateField', e.target.value)}
+                    placeholder="created_date"
+                  />
+                  <small className="help-text">Field containing date values for range filtering</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Sample Size Limit</label>
+                  <input
+                    type="number"
+                    value={formData.parameters.sampleSize || ''}
+                    onChange={(e) => handleParameterChange('sampleSize', parseInt(e.target.value) || '')}
+                    placeholder="1000"
+                  />
+                  <small className="help-text">Maximum number of records to analyze (leave empty for all)</small>
+                </div>
+              </div>
+            )}
+
+            {/* Correlation Analysis Configuration */}
+            {formData.parameters.analysisType === 'correlation' && (
+              <div className="form-section">
+                <h4 className="section-title">
+                  <FaExchangeAlt /> Correlation Analysis
+                </h4>
+                
+                <div className="form-group">
+                  <label>Fields to Correlate</label>
+                  <textarea
+                    value={formData.parameters.correlationFields || ''}
+                    onChange={(e) => handleParameterChange('correlationFields', e.target.value)}
+                    placeholder="price,quantity,profit,rating"
+                    rows={3}
+                  />
+                  <small className="help-text">Comma-separated numeric fields to analyze correlations</small>
+                </div>
+
+                <div className="form-group">
+                  <label>Correlation Method</label>
+                  <select
+                    value={formData.parameters.correlationMethod || 'pearson'}
+                    onChange={(e) => handleParameterChange('correlationMethod', e.target.value)}
+                  >
+                    <option value="pearson">Pearson</option>
+                    <option value="spearman">Spearman</option>
+                    <option value="kendall">Kendall</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.parameters.generateHeatmap || false}
+                      onChange={(e) => handleParameterChange('generateHeatmap', e.target.checked)}
+                    />
+                    Generate Correlation Heatmap
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Output Configuration */}
+            <div className="form-section">
+              <h4 className="section-title">
+                <FaFileExport /> Output Configuration
+              </h4>
+              
+              <div className="form-group">
+                <label>Output Field</label>
+                <input
+                  type="text"
+                  value={formData.parameters.outputField || 'analyticsResult'}
+                  onChange={(e) => handleParameterChange('outputField', e.target.value)}
+                  placeholder="analyticsResult"
+                />
+                <small className="help-text">Field to store analysis results</small>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.includeRawData || false}
+                    onChange={(e) => handleParameterChange('includeRawData', e.target.checked)}
+                  />
+                  Include Raw Data in Output
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.generateSummary || true}
+                    onChange={(e) => handleParameterChange('generateSummary', e.target.checked)}
+                  />
+                  Generate Analysis Summary
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label>Export Format</label>
+                <select
+                  value={formData.parameters.exportFormat || 'json'}
+                  onChange={(e) => handleParameterChange('exportFormat', e.target.value)}
+                >
+                  <option value="json">JSON</option>
+                  <option value="csv">CSV</option>
+                  <option value="excel">Excel</option>
+                  <option value="pdf">PDF Report</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Advanced Options */}
+            <div className="form-section">
+              <h4 className="section-title">Advanced Options</h4>
+              
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.handleMissingValues || true}
+                    onChange={(e) => handleParameterChange('handleMissingValues', e.target.checked)}
+                  />
+                  Handle Missing Values
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label>Missing Value Strategy</label>
+                <select
+                  value={formData.parameters.missingValueStrategy || 'exclude'}
+                  onChange={(e) => handleParameterChange('missingValueStrategy', e.target.value)}
+                  disabled={!formData.parameters.handleMissingValues}
+                >
+                  <option value="exclude">Exclude Missing Values</option>
+                  <option value="mean">Replace with Mean</option>
+                  <option value="median">Replace with Median</option>
+                  <option value="zero">Replace with Zero</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.parameters.enableCaching || false}
+                    onChange={(e) => handleParameterChange('enableCaching', e.target.checked)}
+                  />
+                  Enable Result Caching
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label>Processing Timeout (seconds)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.timeout || 300}
+                  onChange={(e) => handleParameterChange('timeout', parseInt(e.target.value) || 300)}
+                  min="30"
+                  max="1800"
+                />
               </div>
             </div>
           </>
