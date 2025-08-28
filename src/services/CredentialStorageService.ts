@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { ICredential, Credential } from '../models/Credential';
-import { createLogger, Logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+import type { Logger } from 'winston';
 import { Op } from 'sequelize';
 import axios from 'axios';
 import { Client as SSHClient } from 'ssh2';

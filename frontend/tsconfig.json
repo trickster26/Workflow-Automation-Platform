@@ -18,15 +18,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@/components/*": ["components/*"],
-      "@/services/*": ["services/*"],
-      "@/types/*": ["types/*"],
-      "@/stores/*": ["stores/*"],
-      "@/hooks/*": ["hooks/*"],
-      "@/contexts/*": ["contexts/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],
