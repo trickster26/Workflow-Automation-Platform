@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import speakeasy from 'speakeasy';
 import { Op } from 'sequelize';
-import { UserModel, IUser } from '../models/User.model';
+import { User as UserModel } from '../models';
+import { IUser } from '../models/User.model';
 import { createLogger } from '../utils/logger';
 import config from '../config';
 

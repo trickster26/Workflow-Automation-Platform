@@ -14,6 +14,12 @@
   gap: 8px;
 }
 
+.toolbar-section:first-child {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .toolbar-title {
   display: flex;
   align-items: center;
@@ -97,4 +103,58 @@
   height: 24px;
   background: #e5e7eb;
   margin: 0 4px;
+}
+
+.workflow-meta-fields {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.workflow-name-field,
+.workflow-description-field {
+  padding: 4px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+}
+
+.workflow-name-field {
+  font-weight: 600;
+  color: #111827;
+  width: 200px;
+}
+
+.workflow-description-field {
+  color: #6b7280;
+  width: 300px;
+}
+
+.workflow-name-field:focus,
+.workflow-description-field:focus {
+  border-color: #6366f1;
+}
+
+@media (max-width: 1024px) {
+  .workflow-meta-fields {
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+  }
+  
+  .workflow-name-field,
+  .workflow-description-field {
+    width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .workflow-name-field,
+  .workflow-description-field {
+    width: 200px;
+    font-size: 12px;
+  }
 }

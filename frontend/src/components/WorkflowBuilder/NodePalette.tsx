@@ -15,12 +15,15 @@ import {
   FaExchangeAlt,
   FaCalculator,
   FaFileAlt,
+  FaFileUpload,
+  FaFileDownload,
   FaCloud,
   FaBell,
   FaRobot,
   FaChartBar,
   FaFileExport,
-  FaTable
+  FaTable,
+  FaAws
 } from 'react-icons/fa';
 import './NodePalette.css';
 
@@ -102,21 +105,30 @@ const nodeTemplates: NodeTemplate[] = [
     nodeType: 'action',
   },
   {
-    type: 'file',
-    label: 'File',
-    icon: <FaFileAlt />,
-    color: '#6366f1',
+    type: 'fileUpload',
+    label: 'File Upload',
+    icon: <FaFileUpload />,
+    color: '#10b981',
     category: 'Actions',
-    description: 'File operations',
+    description: 'Upload files to server storage',
     nodeType: 'action',
   },
   {
-    type: 'cloud',
-    label: 'Cloud Service',
-    icon: <FaCloud />,
-    color: '#6366f1',
+    type: 'fileDownload',
+    label: 'File Download',
+    icon: <FaFileDownload />,
+    color: '#3b82f6',
     category: 'Actions',
-    description: 'Cloud integrations',
+    description: 'Download files from URLs or storage',
+    nodeType: 'action',
+  },
+  {
+    type: 'aws',
+    label: 'AWS',
+    icon: <FaAws />,
+    color: '#ff9900',
+    category: 'Actions', 
+    description: 'Amazon Web Services (S3, Lambda, SQS, SNS, SES)',
     nodeType: 'action',
   },
   
@@ -258,8 +270,7 @@ export const NodePalette: React.FC = () => {
   });
   
   const onDragStart = (event: React.DragEvent, nodeType: string, nodeData: NodeTemplate) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.setData('nodeData', JSON.stringify(nodeData));
+    event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
     event.dataTransfer.effectAllowed = 'move';
   };
   

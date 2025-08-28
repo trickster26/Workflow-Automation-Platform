@@ -154,7 +154,7 @@ export const ExecutionResults: React.FC<ExecutionResultsProps> = ({ jobId, onClo
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .execution-results-overlay {
           position: fixed;
           top: 0;

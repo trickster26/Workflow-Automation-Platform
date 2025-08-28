@@ -1,0 +1,51 @@
+name: Slack Notifications
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+jobs:
+  slack-notify:
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Slack Notification on Failure
+      if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: |
+          🚨 *CI Pipeline Failed*
+          
+          *Repository:* ${{ github.repository }}
+          *Branch:* ${{ github.event.workflow_run.head_branch }}
+          *Commit:* ${{ github.event.workflow_run.head_sha }}
+          *Author:* ${{ github.event.workflow_run.head_commit.author.name }}
+          
+          <${{ github.event.workflow_run.html_url }}|View Failed Run>
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        channel: '#ci-alerts'
+        username: 'GitHub CI'
+        icon_emoji: ':warning:'
+
+    - name: Slack Notification on Success
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: |
+          ✅ *CI Pipeline Succeeded*
+          
+          *Repository:* ${{ github.repository }}
+          *Branch:* ${{ github.event.workflow_run.head_branch }}
+          *Tests:* All passed
+          *Coverage:* Generated
+          
+          Ready for review! 🚀
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        channel: '#ci-success'
+        username: 'GitHub CI'
+        icon_emoji: ':white_check_mark:'

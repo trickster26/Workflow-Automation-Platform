@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
-import { ExecutionModel } from '../models/Execution.model';
-import { WorkflowModel } from '../models/Workflow.model';
+import { WorkflowExecution as ExecutionModel, Workflow as WorkflowModel } from '../models';
 import { executionLoggingService, ILogContext } from './ExecutionLoggingService';
 import { getWebSocketService } from './WebSocketService';
 import { createLogger } from '../utils/logger';

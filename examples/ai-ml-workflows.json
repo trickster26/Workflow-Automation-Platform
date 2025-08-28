@@ -1,0 +1,392 @@
+{
+  "workflows": [
+    {
+      "name": "Content Creation Pipeline",
+      "description": "Generate, analyze, and optimize content using AI/ML",
+      "nodes": [
+        {
+          "id": "input",
+          "type": "webhook",
+          "name": "Content Request",
+          "parameters": {
+            "method": "POST",
+            "path": "/content-request"
+          }
+        },
+        {
+          "id": "generate-text",
+          "type": "aiml",
+          "name": "Generate Article",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "model": "gpt-4",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "topic",
+            "outputField": "article",
+            "systemPrompt": "You are a professional content writer. Create engaging, well-structured articles.",
+            "promptTemplate": "Write a comprehensive article about {{topic}}. Make it informative and engaging for a general audience.",
+            "maxTokens": 2000,
+            "temperature": 0.7,
+            "includeMetadata": true
+          }
+        },
+        {
+          "id": "analyze-sentiment",
+          "type": "aiml",
+          "name": "Sentiment Analysis",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "model": "gpt-3.5-turbo",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "article",
+            "outputField": "sentiment",
+            "systemPrompt": "Analyze the sentiment and tone of the given text.",
+            "promptTemplate": "Analyze the sentiment, tone, and emotional impact of this text: {{article}}",
+            "maxTokens": 200,
+            "temperature": 0.3
+          }
+        },
+        {
+          "id": "generate-image",
+          "type": "aiml",
+          "name": "Create Featured Image",
+          "parameters": {
+            "service": "openai",
+            "taskType": "image",
+            "imageOperation": "generate",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "topic",
+            "outputField": "featuredImage",
+            "generatePrompt": "A professional, eye-catching featured image for an article about {{topic}}",
+            "imageSize": "1792x1024",
+            "numImages": 1
+          }
+        }
+      ],
+      "connections": [
+        { "source": "input", "target": "generate-text" },
+        { "source": "generate-text", "target": "analyze-sentiment" },
+        { "source": "generate-text", "target": "generate-image" }
+      ]
+    },
+    {
+      "name": "Document Processing Pipeline",
+      "description": "Process documents with OCR, translation, and summarization",
+      "nodes": [
+        {
+          "id": "upload",
+          "type": "fileUpload",
+          "name": "Document Upload",
+          "parameters": {
+            "uploadMode": "file",
+            "addToDownloads": true
+          }
+        },
+        {
+          "id": "extract-text",
+          "type": "aiml",
+          "name": "OCR Text Extraction",
+          "parameters": {
+            "service": "openai",
+            "taskType": "image",
+            "imageOperation": "analyze",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "filePath",
+            "outputField": "extractedText",
+            "analysisTypes": ["text", "objects"]
+          }
+        },
+        {
+          "id": "translate",
+          "type": "aiml",
+          "name": "Translate to English",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "textOperation": "translate",
+            "model": "gpt-4",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "extractedText",
+            "outputField": "translatedText",
+            "sourceLanguage": "auto",
+            "targetLanguage": "en"
+          }
+        },
+        {
+          "id": "summarize",
+          "type": "aiml",
+          "name": "Generate Summary",
+          "parameters": {
+            "service": "anthropic",
+            "taskType": "text",
+            "textOperation": "summarize",
+            "model": "claude-3-sonnet",
+            "apiKey": "${ANTHROPIC_API_KEY}",
+            "inputField": "translatedText",
+            "outputField": "summary",
+            "systemPrompt": "You are an expert at creating concise, informative summaries.",
+            "promptTemplate": "Create a detailed summary of this document: {{translatedText}}",
+            "maxTokens": 500
+          }
+        }
+      ],
+      "connections": [
+        { "source": "upload", "target": "extract-text" },
+        { "source": "extract-text", "target": "translate" },
+        { "source": "translate", "target": "summarize" }
+      ]
+    },
+    {
+      "name": "Voice-to-Article Pipeline",
+      "description": "Convert audio recordings to written articles",
+      "nodes": [
+        {
+          "id": "audio-input",
+          "type": "webhook",
+          "name": "Audio Upload",
+          "parameters": {
+            "method": "POST",
+            "path": "/audio-upload"
+          }
+        },
+        {
+          "id": "transcribe",
+          "type": "aiml",
+          "name": "Speech to Text",
+          "parameters": {
+            "service": "openai",
+            "taskType": "audio",
+            "audioOperation": "transcribe",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "audioFile",
+            "outputField": "transcript",
+            "audioLanguage": "auto",
+            "includeTimestamps": true
+          }
+        },
+        {
+          "id": "clean-text",
+          "type": "aiml",
+          "name": "Clean & Structure",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "textOperation": "rewrite",
+            "model": "gpt-4",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "transcript",
+            "outputField": "cleanedText",
+            "systemPrompt": "You are an editor who cleans up transcribed speech into well-structured written text.",
+            "promptTemplate": "Clean up and structure this transcribed text, removing filler words and improving readability: {{transcript}}",
+            "maxTokens": 1500,
+            "temperature": 0.3
+          }
+        },
+        {
+          "id": "generate-title",
+          "type": "aiml",
+          "name": "Generate Title",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "model": "gpt-3.5-turbo",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "cleanedText",
+            "outputField": "title",
+            "systemPrompt": "Generate compelling, SEO-friendly titles for articles.",
+            "promptTemplate": "Generate 3 compelling title options for this article: {{cleanedText}}",
+            "maxTokens": 100,
+            "temperature": 0.8
+          }
+        }
+      ],
+      "connections": [
+        { "source": "audio-input", "target": "transcribe" },
+        { "source": "transcribe", "target": "clean-text" },
+        { "source": "clean-text", "target": "generate-title" }
+      ]
+    },
+    {
+      "name": "Customer Support AI",
+      "description": "AI-powered customer support with sentiment analysis and response generation",
+      "nodes": [
+        {
+          "id": "ticket-input",
+          "type": "webhook",
+          "name": "Support Ticket",
+          "parameters": {
+            "method": "POST",
+            "path": "/support-ticket"
+          }
+        },
+        {
+          "id": "classify-urgency",
+          "type": "aiml",
+          "name": "Classify Urgency",
+          "parameters": {
+            "service": "openai",
+            "taskType": "classification",
+            "model": "gpt-3.5-turbo",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "message",
+            "outputField": "urgency",
+            "systemPrompt": "Classify customer support messages by urgency level.",
+            "promptTemplate": "Classify this support message urgency as LOW, MEDIUM, HIGH, or CRITICAL: {{message}}",
+            "maxTokens": 50,
+            "temperature": 0.1
+          }
+        },
+        {
+          "id": "sentiment-analysis",
+          "type": "aiml",
+          "name": "Sentiment Analysis",
+          "parameters": {
+            "service": "anthropic",
+            "taskType": "text",
+            "textOperation": "sentiment",
+            "model": "claude-3-haiku",
+            "apiKey": "${ANTHROPIC_API_KEY}",
+            "inputField": "message",
+            "outputField": "sentiment",
+            "systemPrompt": "Analyze customer sentiment and emotional state.",
+            "promptTemplate": "Analyze the sentiment and emotion in this customer message: {{message}}",
+            "maxTokens": 150
+          }
+        },
+        {
+          "id": "generate-response",
+          "type": "aiml",
+          "name": "Generate Response",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "model": "gpt-4",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "message",
+            "outputField": "suggestedResponse",
+            "systemPrompt": "You are a helpful, empathetic customer support representative. Generate professional, helpful responses to customer inquiries.",
+            "promptTemplate": "Customer Message: {{message}}\\nUrgency: {{urgency}}\\nSentiment: {{sentiment}}\\n\\nGenerate a helpful, professional response:",
+            "maxTokens": 400,
+            "temperature": 0.6
+          }
+        }
+      ],
+      "connections": [
+        { "source": "ticket-input", "target": "classify-urgency" },
+        { "source": "ticket-input", "target": "sentiment-analysis" },
+        { "source": "classify-urgency", "target": "generate-response" },
+        { "source": "sentiment-analysis", "target": "generate-response" }
+      ]
+    },
+    {
+      "name": "Content Moderation Pipeline",
+      "description": "AI-powered content moderation for text and images",
+      "nodes": [
+        {
+          "id": "content-input",
+          "type": "webhook",
+          "name": "Content Submission",
+          "parameters": {
+            "method": "POST",
+            "path": "/moderate-content"
+          }
+        },
+        {
+          "id": "text-moderation",
+          "type": "aiml",
+          "name": "Text Moderation",
+          "parameters": {
+            "service": "openai",
+            "taskType": "text",
+            "textOperation": "classify",
+            "model": "gpt-4",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "text",
+            "outputField": "textModeration",
+            "systemPrompt": "You are a content moderator. Analyze content for harmful, inappropriate, or policy-violating material.",
+            "promptTemplate": "Analyze this content for: hate speech, harassment, violence, adult content, spam, or policy violations. Provide a safety score (0-100) and explanation: {{text}}",
+            "maxTokens": 200,
+            "temperature": 0.1
+          }
+        },
+        {
+          "id": "image-moderation",
+          "type": "aiml",
+          "name": "Image Moderation",
+          "parameters": {
+            "service": "openai",
+            "taskType": "image",
+            "imageOperation": "analyze",
+            "apiKey": "${OPENAI_API_KEY}",
+            "inputField": "imageUrl",
+            "outputField": "imageModeration",
+            "analysisTypes": ["nsfw", "objects", "violence"]
+          }
+        },
+        {
+          "id": "final-decision",
+          "type": "aiml",
+          "name": "Moderation Decision",
+          "parameters": {
+            "service": "anthropic",
+            "taskType": "text",
+            "model": "claude-3-sonnet",
+            "apiKey": "${ANTHROPIC_API_KEY}",
+            "inputField": "textModeration",
+            "outputField": "decision",
+            "systemPrompt": "Make final content moderation decisions based on analysis results.",
+            "promptTemplate": "Text Analysis: {{textModeration}}\\nImage Analysis: {{imageModeration}}\\n\\nMake final decision: APPROVE, REJECT, or REVIEW_REQUIRED with reasoning:",
+            "maxTokens": 150,
+            "temperature": 0.1
+          }
+        }
+      ],
+      "connections": [
+        { "source": "content-input", "target": "text-moderation" },
+        { "source": "content-input", "target": "image-moderation" },
+        { "source": "text-moderation", "target": "final-decision" },
+        { "source": "image-moderation", "target": "final-decision" }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "name": "AI Text Processing Template",
+      "description": "Template for common AI text processing tasks",
+      "parameters": {
+        "service": "openai",
+        "taskType": "text",
+        "model": "gpt-4",
+        "maxTokens": 1000,
+        "temperature": 0.7,
+        "includeMetadata": true,
+        "continueOnError": true,
+        "retryAttempts": 3
+      }
+    },
+    {
+      "name": "AI Image Processing Template", 
+      "description": "Template for AI image processing tasks",
+      "parameters": {
+        "service": "openai",
+        "taskType": "image",
+        "imageOperation": "analyze",
+        "analysisTypes": ["objects", "text", "faces"],
+        "includeMetadata": true
+      }
+    },
+    {
+      "name": "AI Audio Processing Template",
+      "description": "Template for AI audio processing tasks", 
+      "parameters": {
+        "service": "openai",
+        "taskType": "audio",
+        "audioOperation": "transcribe",
+        "audioLanguage": "auto",
+        "includeTimestamps": false
+      }
+    }
+  ]
+}

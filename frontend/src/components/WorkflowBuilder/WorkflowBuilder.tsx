@@ -48,6 +48,10 @@ interface WorkflowBuilderProps {
   onSave?: (nodes: Node[], edges: Edge[]) => void;
   onTest?: (nodes: Node[], edges: Edge[]) => void;
   readOnly?: boolean;
+  workflowName?: string;
+  workflowDescription?: string;
+  onWorkflowNameChange?: (name: string) => void;
+  onWorkflowDescriptionChange?: (description: string) => void;
 }
 
 const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({
@@ -57,6 +61,10 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({
   onSave,
   onTest,
   readOnly = false,
+  workflowName,
+  workflowDescription,
+  onWorkflowNameChange,
+  onWorkflowDescriptionChange,
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -240,6 +248,10 @@ const WorkflowBuilderContent: React.FC<WorkflowBuilderProps> = ({
         onExport={handleExport}
         onImport={handleImport}
         isReadOnly={readOnly}
+        workflowName={workflowName}
+        workflowDescription={workflowDescription}
+        onNameChange={onWorkflowNameChange}
+        onDescriptionChange={onWorkflowDescriptionChange}
       />
       
       <div className="workflow-builder-container">

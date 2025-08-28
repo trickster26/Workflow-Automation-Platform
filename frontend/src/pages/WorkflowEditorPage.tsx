@@ -126,15 +126,41 @@ const WorkflowEditorPage: React.FC = () => {
       },
     }));
 
-    const edges: Edge[] = (workflow.connections || []).map((conn: any, index: number) => ({
-      id: `${conn.source.nodeId}-${conn.target.nodeId}-${index}`,
-      source: conn.source.nodeId,
-      target: conn.target.nodeId,
-      sourceHandle: conn.source.outputIndex?.toString(),
-      targetHandle: conn.target.inputIndex?.toString(),
-      type: 'smoothstep',
-      animated: true,
-    }));
+    const edges: Edge[] = (workflow.connections || []).map((conn: any, index: number) => {
+      // Handle both connection formats: new template format and existing format
+      let sourceNodeId: string;
+      let targetNodeId: string;
+      let sourceHandle: string | undefined;
+      let targetHandle: string | undefined;
+
+      if (conn.from && conn.to) {
+        // Template format: { from: 'nodeId', to: 'nodeId' }
+        sourceNodeId = conn.from;
+        targetNodeId = conn.to;
+        sourceHandle = conn.output?.toString();
+        targetHandle = conn.input?.toString();
+      } else if (conn.source?.nodeId && conn.target?.nodeId) {
+        // Existing format: { source: { nodeId: 'id' }, target: { nodeId: 'id' } }
+        sourceNodeId = conn.source.nodeId;
+        targetNodeId = conn.target.nodeId;
+        sourceHandle = conn.source.outputIndex?.toString();
+        targetHandle = conn.target.inputIndex?.toString();
+      } else {
+        // Fallback - skip invalid connections
+        console.warn('Invalid connection format:', conn);
+        return null;
+      }
+
+      return {
+        id: `${sourceNodeId}-${targetNodeId}-${index}`,
+        source: sourceNodeId,
+        target: targetNodeId,
+        sourceHandle,
+        targetHandle,
+        type: 'smoothstep',
+        animated: true,
+      };
+    }).filter(Boolean); // Remove null connections
 
     return { nodes, edges };
   };
@@ -172,22 +198,6 @@ const WorkflowEditorPage: React.FC = () => {
           >
             ← Back to Workflows
           </button>
-          <div className="workflow-info">
-            <input
-              type="text"
-              className="workflow-name-input"
-              value={workflow?.name || 'New Workflow'}
-              onChange={(e) => setWorkflow({ ...workflow, name: e.target.value })}
-              placeholder="Workflow Name"
-            />
-            <input
-              type="text"
-              className="workflow-description-input"
-              value={workflow?.description || ''}
-              onChange={(e) => setWorkflow({ ...workflow, description: e.target.value })}
-              placeholder="Workflow Description"
-            />
-          </div>
           {saving && <span className="saving-indicator">Saving...</span>}
         </div>
       </div>
@@ -200,6 +210,10 @@ const WorkflowEditorPage: React.FC = () => {
           onSave={handleSave}
           onTest={handleTest}
           readOnly={false}
+          workflowName={workflow?.name || 'New Workflow'}
+          workflowDescription={workflow?.description || ''}
+          onWorkflowNameChange={(name) => setWorkflow({ ...workflow, name })}
+          onWorkflowDescriptionChange={(description) => setWorkflow({ ...workflow, description })}
         />
       </div>
 

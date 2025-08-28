@@ -1,8 +1,7 @@
 import { EventEmitter } from 'events';
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { WebhookModel } from '../models/Webhook.model';
-import { WorkflowModel } from '../models/Workflow.model';
+import { Webhook as WebhookModel, Workflow as WorkflowModel } from '../models';
 import { executionService } from './ExecutionService';
 import { IWebhookData, IWorkflow, INode, NodeType } from '../types/workflow.types';
 import { createLogger } from '../utils/logger';
@@ -56,6 +55,11 @@ export class WebhookService extends EventEmitter {
 
       logger.info(`Initialized ${webhooks.length} webhooks`);
     } catch (error: any) {
+      // If the table doesn't exist yet, just log a warning and continue
+      if (error.name === 'SequelizeDatabaseError' && error.parent?.code === 'ER_NO_SUCH_TABLE') {
+        logger.warn('Webhooks table does not exist yet. Skipping webhook initialization.');
+        return;
+      }
       logger.error('Error initializing webhooks:', error);
     }
   }

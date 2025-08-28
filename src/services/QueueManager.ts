@@ -155,13 +155,12 @@ export class QueueManager {
       throw new Error(`Queue ${queueName} not found`);
     }
 
-    const [waiting, active, completed, failed, delayed, paused] = await Promise.all([
+    const [waiting, active, completed, failed, delayed] = await Promise.all([
       queue.getWaiting(),
       queue.getActive(),
       queue.getCompleted(),
       queue.getFailed(),
       queue.getDelayed(),
-      queue.getPaused(),
     ]);
 
     return {
@@ -172,7 +171,7 @@ export class QueueManager {
         completed: completed.length,
         failed: failed.length,
         delayed: delayed.length,
-        paused: paused.length,
+        paused: queue.isPaused() ? 1 : 0,
       },
       jobs: {
         waiting: waiting.map(job => ({
@@ -359,47 +358,55 @@ export class QueueManager {
       name: 'maintenance',
       concurrency: 1,
       defaultJobOptions: {
-        repeat: { cron: '0 2 * * *' }, // Run daily at 2 AM
         removeOnComplete: 5,
         removeOnFail: 5,
       },
       processor: async (job: Job) => {
-        logger.info('Running queue maintenance...');
+        logger.info('Processing maintenance job:', { jobName: job.name, jobData: job.data });
+        
+        if (job.name === 'daily-cleanup') {
+          logger.info('Running queue maintenance...');
 
-        const results = [];
+          const results = [];
 
-        for (const queueName of this.queues.keys()) {
-          try {
-            if (queueName === 'maintenance') continue;
+          for (const queueName of this.queues.keys()) {
+            try {
+              if (queueName === 'maintenance') continue;
 
-            const cleaned = await this.cleanQueue(queueName, 24 * 60 * 60 * 1000, 'completed');
-            const failedCleaned = await this.cleanQueue(queueName, 7 * 24 * 60 * 60 * 1000, 'failed');
+              const cleaned = await this.cleanQueue(queueName, 24 * 60 * 60 * 1000, 'completed');
+              const failedCleaned = await this.cleanQueue(queueName, 7 * 24 * 60 * 60 * 1000, 'failed');
 
-            results.push({
-              queue: queueName,
-              completedCleaned: cleaned,
-              failedCleaned,
-            });
-          } catch (error: any) {
-            logger.error(`Error during maintenance for queue ${queueName}:`, error);
+              results.push({
+                queue: queueName,
+                completedCleaned: cleaned,
+                failedCleaned,
+              });
+            } catch (error: any) {
+              logger.error(`Error during maintenance for queue ${queueName}:`, error);
+            }
           }
-        }
 
-        logger.info('Queue maintenance completed', { results });
-        return { results };
+          logger.info('Queue maintenance completed', { results });
+          return { results };
+        } else {
+          logger.warn(`Unknown maintenance job type: ${job.name}. Skipping processing.`);
+          return { message: `Unknown job type: ${job.name}` };
+        }
       },
       events: {
         completed: (job: Job, result: any) => {
-          logger.info('Queue maintenance job completed', result);
+          logger.info('Queue maintenance job completed', { jobName: job.name, result });
         },
         failed: (job: Job, error: Error) => {
-          logger.error('Queue maintenance job failed:', error);
+          logger.error('Queue maintenance job failed:', { jobName: job.name, error: error.message });
         },
       },
     });
 
+    // Schedule the daily cleanup job
     await maintenanceQueue.add('daily-cleanup', {}, {
       repeat: { cron: '0 2 * * *' },
+      jobId: 'daily-cleanup-job', // Use a fixed job ID to prevent duplicates
     });
 
     logger.info('Queue maintenance job scheduled');
