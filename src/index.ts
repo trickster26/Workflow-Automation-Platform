@@ -32,7 +32,7 @@ import { createIntegrationRoutes } from './routes/integrationRoutes';
 import { IntegrationConfigService } from './services/IntegrationConfigService';
 import { executionMonitoringService } from './services/ExecutionMonitoringService';
 import { executionLoggingService } from './services/ExecutionLoggingService';
-import templateRoutes from './routes/templateRoutes';
+import templateRoutes from './routes/simpleTemplateRoutes';
 
 const logger = createLogger('App');
 

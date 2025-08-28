@@ -1,6 +1,5 @@
 import crypto from 'crypto';
-import { Credential, ICredential } from '../models/Credential';
-import { User } from '../models/User';
+import { ICredential } from '../models/Credential';
 import { createLogger } from '../utils/logger';
 import { Op } from 'sequelize';
 import axios from 'axios';

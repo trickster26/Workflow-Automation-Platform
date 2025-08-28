@@ -4,6 +4,7 @@ import { TemplateImportExportService } from '../services/TemplateImportExportSer
 import { TemplateCollaborationService } from '../services/TemplateCollaborationService';
 import { TemplateValidationService } from '../services/TemplateValidationService';
 import { TemplateSearchService } from '../services/TemplateSearchService';
+import { templateService } from '../services/TemplateService';
 import { authenticateToken } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { body, param, query } from 'express-validator';
@@ -97,6 +98,111 @@ export function createTemplateRoutes(
   validationService: TemplateValidationService,
   searchService: TemplateSearchService
 ) {
+  // NEW TEMPLATE SYSTEM ROUTES
+  
+  // Get node templates
+  router.get('/nodes', async (req, res) => {
+    try {
+      const options = {
+        category: req.query.category as string,
+        difficulty: req.query.difficulty as 'beginner' | 'intermediate' | 'advanced',
+        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
+        search: req.query.search as string,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      };
+
+      const templates = await templateService.getNodeTemplates(options);
+      
+      res.json({
+        success: true,
+        data: templates,
+        count: templates.length
+      });
+    } catch (error: any) {
+      logger.error('Error fetching node templates:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Get workflow templates  
+  router.get('/workflows', async (req, res) => {
+    try {
+      const options = {
+        category: req.query.category as string,
+        difficulty: req.query.difficulty as 'beginner' | 'intermediate' | 'advanced',
+        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
+        search: req.query.search as string,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      };
+
+      const templates = await templateService.getWorkflowTemplates(options);
+      
+      res.json({
+        success: true,
+        data: templates,
+        count: templates.length
+      });
+    } catch (error: any) {
+      logger.error('Error fetching workflow templates:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Get scenario templates
+  router.get('/scenarios', async (req, res) => {
+    try {
+      const options = {
+        industry: req.query.industry as string,
+        category: req.query.category as string,
+        difficulty: req.query.difficulty as 'beginner' | 'intermediate' | 'advanced',
+        tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
+        search: req.query.search as string,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      };
+
+      const templates = await templateService.getScenarioTemplates(options);
+      
+      res.json({
+        success: true,
+        data: templates,
+        count: templates.length
+      });
+    } catch (error: any) {
+      logger.error('Error fetching scenario templates:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // Template statistics
+  router.get('/template-stats', async (req, res) => {
+    try {
+      const stats = await templateService.getTemplateStats();
+      
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (error: any) {
+      logger.error('Error fetching template statistics:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
   // Get template categories
   router.get('/categories', async (req, res) => {
     try {

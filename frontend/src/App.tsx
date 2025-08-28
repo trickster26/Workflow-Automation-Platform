@@ -6,6 +6,7 @@ import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import { ExecutionsPage } from './pages/ExecutionsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TemplatesPage } from './pages/TemplatesPage';
+import TemplateCreatePage from './pages/TemplateCreatePage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -52,6 +53,7 @@ function AppContent() {
         <Route path="workflows/:workflowId/edit" element={<WorkflowEditorPage />} />
         <Route path="workflows/new" element={<WorkflowEditorPage />} />
         <Route path="templates" element={<TemplatesPage />} />
+        <Route path="templates/create" element={<TemplateCreatePage />} />
         <Route path="executions" element={<ExecutionsPage />} />
         <Route path="executions/:workflowId" element={<ExecutionsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />

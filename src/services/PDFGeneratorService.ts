@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as Handlebars from 'handlebars';
-import * as puppeteer from 'puppeteer';
+// import * as puppeteer from 'puppeteer';
 import PDFDocument from 'pdfkit';
 import { logger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -371,40 +371,46 @@ export class PDFGeneratorService {
       const compiledTemplate = Handlebars.compile(template);
       const html = compiledTemplate(options.data);
 
-      // Generate PDF using puppeteer
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      // Generate PDF using pdfkit (simplified text-based approach)
+      const doc = new PDFDocument({
+        size: options.format || 'A4',
+        layout: options.orientation === 'landscape' ? 'landscape' : 'portrait',
+        margins: {
+          top: options.margin?.top || 50,
+          bottom: options.margin?.bottom || 50,
+          left: options.margin?.left || 50,
+          right: options.margin?.right || 50
+        }
       });
 
-      const page = await browser.newPage();
-      await page.setContent(html);
+      // Pipe PDF content to file
+      doc.pipe(fs.createWriteStream(filePath));
 
-      const pdfOptions: puppeteer.PDFOptions = {
-        path: filePath,
-        format: (options.format || 'A4') as puppeteer.PaperFormat,
-        landscape: options.orientation === 'landscape',
-        printBackground: true,
-        margin: {
-          top: options.margin?.top || 20,
-          right: options.margin?.right || 20,
-          bottom: options.margin?.bottom || 20,
-          left: options.margin?.left || 20,
-        },
-      };
-
-      if (options.header) {
-        pdfOptions.displayHeaderFooter = true;
-        pdfOptions.headerTemplate = options.header;
+      // Add title
+      if (options.data.title) {
+        doc.fontSize(20).text(options.data.title, { align: 'center' });
+        doc.moveDown();
       }
 
+      // For now, we'll convert the complex HTML template to simple text content
+      // This is a simplified fallback until puppeteer can be installed properly
+      if (options.template === 'invoice' && options.data) {
+        this.generateInvoicePDF(doc, options.data);
+      } else if (options.template === 'report' && options.data) {
+        this.generateReportPDF(doc, options.data);
+      } else if (options.template === 'table' && options.data) {
+        this.generateTablePDF(doc, options.data);
+      } else {
+        // Simple content output
+        doc.fontSize(12).text(JSON.stringify(options.data, null, 2));
+      }
+
+      // Add footer if specified
       if (options.footer) {
-        pdfOptions.displayHeaderFooter = true;
-        pdfOptions.footerTemplate = options.footer;
+        doc.text(options.footer, 50, doc.page.height - 100, { align: 'center' });
       }
 
-      await page.pdf(pdfOptions);
-      await browser.close();
+      doc.end();
 
       // Get file size
       const stats = fs.statSync(filePath);
@@ -482,5 +488,101 @@ export class PDFGeneratorService {
 
   public getOutputPath(): string {
     return this.outputDir;
+  }
+
+  private generateInvoicePDF(doc: PDFDocument, data: any): void {
+    // Invoice header
+    doc.fontSize(16).text('INVOICE', { align: 'center' });
+    doc.moveDown();
+
+    // Invoice details
+    if (data.invoiceNumber) {
+      doc.fontSize(12).text(`Invoice #: ${data.invoiceNumber}`);
+    }
+    if (data.invoiceDate) {
+      doc.text(`Date: ${new Date(data.invoiceDate).toLocaleDateString()}`);
+    }
+    if (data.dueDate) {
+      doc.text(`Due Date: ${new Date(data.dueDate).toLocaleDateString()}`);
+    }
+    doc.moveDown();
+
+    // Client details
+    if (data.clientName) {
+      doc.text(`Bill To: ${data.clientName}`);
+    }
+    if (data.clientAddress) {
+      doc.text(data.clientAddress);
+    }
+    doc.moveDown();
+
+    // Items
+    if (data.items && data.items.length > 0) {
+      doc.text('Items:', { underline: true });
+      data.items.forEach((item: any) => {
+        doc.text(`${item.description} - Qty: ${item.quantity} - Rate: ${item.rate} - Amount: ${item.amount}`);
+      });
+      doc.moveDown();
+    }
+
+    // Total
+    if (data.total) {
+      doc.fontSize(14).text(`Total: ${data.total}`, { align: 'right' });
+    }
+  }
+
+  private generateReportPDF(doc: PDFDocument, data: any): void {
+    // Report header
+    if (data.title) {
+      doc.fontSize(18).text(data.title, { align: 'center' });
+    }
+    if (data.subtitle) {
+      doc.fontSize(14).text(data.subtitle, { align: 'center' });
+    }
+    doc.moveDown();
+
+    // Metrics
+    if (data.metrics && data.metrics.length > 0) {
+      doc.fontSize(14).text('Key Metrics:', { underline: true });
+      data.metrics.forEach((metric: any) => {
+        doc.fontSize(12).text(`${metric.label}: ${metric.value}`);
+      });
+      doc.moveDown();
+    }
+
+    // Data summary
+    if (data.data && data.data.length > 0) {
+      doc.fontSize(14).text('Data Summary:', { underline: true });
+      data.data.forEach((row: any) => {
+        doc.fontSize(12).text(Object.values(row).join(' | '));
+      });
+      doc.moveDown();
+    }
+
+    // Summary
+    if (data.summary) {
+      doc.fontSize(14).text('Summary:', { underline: true });
+      doc.fontSize(12).text(data.summary);
+    }
+  }
+
+  private generateTablePDF(doc: PDFDocument, data: any): void {
+    // Table header
+    if (data.title) {
+      doc.fontSize(16).text(data.title, { align: 'center' });
+      doc.moveDown();
+    }
+
+    // Column headers
+    if (data.columns && data.columns.length > 0) {
+      doc.fontSize(12).text(data.columns.join(' | '), { underline: true });
+    }
+
+    // Table data
+    if (data.data && data.data.length > 0) {
+      data.data.forEach((row: any) => {
+        doc.fontSize(10).text(Object.values(row).join(' | '));
+      });
+    }
   }
 }

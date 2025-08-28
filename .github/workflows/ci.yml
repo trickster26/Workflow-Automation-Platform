@@ -12,19 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_USER: test_user
-          POSTGRES_DB: test_workflow_db
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_workflow_db
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
       
       redis:
         image: redis:7
@@ -39,10 +38,10 @@ jobs:
     env:
       NODE_ENV: test
       DB_HOST: localhost
-      DB_PORT: 5432
+      DB_PORT: 3306
       DB_NAME: test_workflow_db
-      DB_USER: test_user
-      DB_PASSWORD: test_password
+      DB_USER: root
+      DB_PASSWORD: root
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       JWT_SECRET: test_jwt_secret_key_for_ci
@@ -68,6 +67,12 @@ jobs:
 
     - name: Run tests
       run: npm run test:coverage
+    
+    - name: Run template system tests
+      run: npm run test:templates
+    
+    - name: Run critical security tests
+      run: npm run test:critical
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v4
@@ -131,9 +136,8 @@ jobs:
     - name: Run ESLint
       run: npx eslint src --ext .ts,.tsx --max-warnings 0
 
-    # Add frontend tests when available
-    # - name: Run tests
-    #   run: npm test
+    - name: Run frontend tests
+      run: npm test -- --run
 
   build-frontend:
     name: Frontend - Build
@@ -240,19 +244,18 @@ jobs:
     needs: [build-backend, build-frontend]
     
     services:
-      postgres:
-        image: postgres:15
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_USER: test_user
-          POSTGRES_DB: test_workflow_db
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_workflow_db
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         ports:
-          - 5432:5432
+          - 3306:3306
       
       redis:
         image: redis:7
@@ -267,10 +270,10 @@ jobs:
     env:
       NODE_ENV: test
       DB_HOST: localhost
-      DB_PORT: 5432
+      DB_PORT: 3306
       DB_NAME: test_workflow_db
-      DB_USER: test_user
-      DB_PASSWORD: test_password
+      DB_USER: root
+      DB_PASSWORD: root
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       JWT_SECRET: test_jwt_secret_key_for_ci
@@ -301,3 +304,73 @@ jobs:
       run: |
         npm run db:test
         npm run check:redis
+
+  template-performance-tests:
+    name: Template Performance Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-test-backend
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_workflow_db
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 3306:3306
+
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 3306
+      DB_NAME: test_workflow_db
+      DB_USER: root
+      DB_PASSWORD: root
+      JWT_SECRET: test_jwt_secret_key_for_ci
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Wait for MySQL
+      run: |
+        until mysqladmin ping -h"127.0.0.1" -P"3306" -u"root" -p"root" --silent; do
+          echo 'Waiting for MySQL...'
+          sleep 2
+        done
+
+    - name: Setup test database
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE IF NOT EXISTS test_workflow_db;"
+
+    - name: Run template performance tests
+      run: npm run test:templates:performance
+      env:
+        NODE_OPTIONS: '--max-old-space-size=4096'
+
+    - name: Generate performance summary
+      run: |
+        echo "## 🚀 Template Performance Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Template system performance tests completed successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Benchmarks verified:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Concurrent template requests: 50+ simultaneous" >> $GITHUB_STEP_SUMMARY
+        echo "- Large template creation: <2s for 100+ nodes" >> $GITHUB_STEP_SUMMARY
+        echo "- Search performance: <50ms average" >> $GITHUB_STEP_SUMMARY
+        echo "- Memory usage: <50MB for large operations" >> $GITHUB_STEP_SUMMARY

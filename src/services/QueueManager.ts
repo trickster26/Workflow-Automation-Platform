@@ -358,11 +358,12 @@ export class QueueManager {
       name: 'maintenance',
       concurrency: 1,
       defaultJobOptions: {
-        repeat: { cron: '0 2 * * *' }, // Run daily at 2 AM
         removeOnComplete: 5,
         removeOnFail: 5,
       },
       processor: async (job: Job) => {
+        logger.info('Processing maintenance job:', { jobName: job.name, jobData: job.data });
+        
         if (job.name === 'daily-cleanup') {
           logger.info('Running queue maintenance...');
 
@@ -388,21 +389,24 @@ export class QueueManager {
           logger.info('Queue maintenance completed', { results });
           return { results };
         } else {
-          throw new Error(`Unknown job type: ${job.name}`);
+          logger.warn(`Unknown maintenance job type: ${job.name}. Skipping processing.`);
+          return { message: `Unknown job type: ${job.name}` };
         }
       },
       events: {
         completed: (job: Job, result: any) => {
-          logger.info('Queue maintenance job completed', result);
+          logger.info('Queue maintenance job completed', { jobName: job.name, result });
         },
         failed: (job: Job, error: Error) => {
-          logger.error('Queue maintenance job failed:', error);
+          logger.error('Queue maintenance job failed:', { jobName: job.name, error: error.message });
         },
       },
     });
 
+    // Schedule the daily cleanup job
     await maintenanceQueue.add('daily-cleanup', {}, {
       repeat: { cron: '0 2 * * *' },
+      jobId: 'daily-cleanup-job', // Use a fixed job ID to prevent duplicates
     });
 
     logger.info('Queue maintenance job scheduled');

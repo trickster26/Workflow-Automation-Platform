@@ -270,8 +270,7 @@ export const NodePalette: React.FC = () => {
   });
   
   const onDragStart = (event: React.DragEvent, nodeType: string, nodeData: NodeTemplate) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.setData('nodeData', JSON.stringify(nodeData));
+    event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
     event.dataTransfer.effectAllowed = 'move';
   };
   
